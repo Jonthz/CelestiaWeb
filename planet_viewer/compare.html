@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -289,7 +290,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Scrollbar styling */
@@ -307,6 +310,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
@@ -340,18 +344,15 @@
                 <select id="left-category" class="search-dropdown" style="margin-bottom: 10px;">
                     <option value="earth" selected>Earth</option>
                     <option value="jupiter">Jupiter</option>
-                    <option value="exoplanets">Another Planets</option>
+                    <option value="exoplanets">Other Planets</option>
                 </select>
-                <input 
-                    type="text" 
-                    id="left-search" 
-                    class="search-dropdown" 
-                    placeholder="Search planet by name or ID..."
-                    autocomplete="off"
-                    style="display: none;"
-                />
-                <div id="left-dropdown" style="display: none;"></div>
+
+                <!-- The planet select replaces the input -->
+                <select id="left-search" class="search-dropdown" size="3" style="width: 100%; overflow-y: auto;">
+                    <option disabled selected>Select a planet...</option>
+                </select>
             </div>
+
 
             <!-- Navigation -->
             <div class="navigation-bar">
@@ -441,14 +442,11 @@
                     <option value="jupiter" selected>Jupiter</option>
                     <option value="exoplanets">Another Planets</option>
                 </select>
-                <input 
-                    type="text" 
-                    id="right-search" 
-                    class="search-dropdown" 
-                    placeholder="Search planet by name or ID..."
-                    autocomplete="off"
-                    style="display: none;"
-                />
+
+                <select id="right-search" class="search-dropdown" size="3" style="width: 100%; overflow-y: auto;">
+                    <option disabled selected>Select a planet...</option>
+                </select>
+
                 <div id="right-dropdown" style="display: none;"></div>
             </div>
 
@@ -537,4 +535,5 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="compare.js"></script>
 </body>
+
 </html>
