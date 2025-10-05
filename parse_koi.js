@@ -200,15 +200,13 @@ if (require.main === module) {
     try {
         const planets = parseSSCFile(sscFilePath);
         
-        // Take first 50 planets for better performance
-        const limitedPlanets = planets.slice(0, 50);
-        
-        fs.writeFileSync(outputPath, JSON.stringify(limitedPlanets, null, 2));
-        console.log(`✅ Successfully converted ${limitedPlanets.length} KOI candidates to ${outputPath}`);
+        // Save all planets (no limit for better data coverage)
+        fs.writeFileSync(outputPath, JSON.stringify(planets, null, 2));
+        console.log(`✅ Successfully converted ${planets.length} KOI candidates to ${outputPath}`);
         
         // Print some statistics
         const types = {};
-        limitedPlanets.forEach(p => {
+        planets.forEach(p => {
             types[p.type] = (types[p.type] || 0) + 1;
         });
         
@@ -217,8 +215,8 @@ if (require.main === module) {
             console.log(`  ${type}: ${count}`);
         });
         
-        const habitableCount = limitedPlanets.filter(p => p.inHabitableZone).length;
-        console.log(`\n🌱 Potentially habitable: ${habitableCount}/${limitedPlanets.length}`);
+        const habitableCount = planets.filter(p => p.inHabitableZone).length;
+        console.log(`\n🌱 Potentially habitable: ${habitableCount}/${planets.length}`);
         
     } catch (error) {
         console.error('❌ Error parsing SSC file:', error);

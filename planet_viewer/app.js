@@ -248,7 +248,7 @@ function createStarfield() {
 
 function setupCamera() {
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 0, cameraDistance);
+    camera.position.set(0, -4.5, cameraDistance);
 }
 
 function setupRenderer() {
@@ -268,7 +268,7 @@ function setupControls() {
     controls.dampingFactor = 0.05;
     controls.enableZoom = true;
     controls.enablePan = false;
-    controls.target.set(0, 0, 0);
+    controls.target.set(0, -3, 0);
     controls.minDistance = 3;
     controls.maxDistance = 15;
 }
@@ -770,7 +770,19 @@ function updateNavigation() {
 }
 
 function updateUI() {
-    document.getElementById('total-planets').textContent = planets.length;
+    const totalElement = document.getElementById('total-planets');
+    if (totalElement) {
+        totalElement.textContent = planets.length;
+    }
+    
+    // Update navigation info
+    const navInfo = document.getElementById('navigation-info');
+    if (navInfo && currentPlanet) {
+        navInfo.innerHTML = `
+            <strong>Planet ${currentPlanetIndex + 1} of ${planets.length}</strong><br>
+            <span style="color: #00d4ff;">${currentPlanet.name}</span> (${currentPlanet.type})
+        `;
+    }
 }
 
 function nextPlanet() {
@@ -821,8 +833,8 @@ function toggleAutoRotate() {
 }
 
 function resetCamera() {
-    camera.position.set(0, 0, cameraDistance);
-    controls.target.set(0, 0, 0);
+    camera.position.set(0, -4.5, cameraDistance);
+    controls.target.set(0, -3, 0);
     controls.update();
 }
 
@@ -949,23 +961,153 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+// Pagination variables
+let currentPage = 0;
+let planetsPerPage = 100;
+let filteredPlanets = [];
+let currentFilter = 'all';
+
 function populatePlanetSelect() {
     const select = document.getElementById('planet-select');
     if (!select || !planets) return;
 
-    select.innerHTML = '<option value="" disabled selected>Select a Planet</option>';
-    console.log(planets)
-    planets.forEach((planet, index) => {
+    // Initialize filtered planets
+    filteredPlanets = [...planets];
+    updatePlanetSelect();
+    setupPaginationControls();
+}
+
+function updatePlanetSelect() {
+    const select = document.getElementById('planet-select');
+    const startIndex = currentPage * planetsPerPage;
+    const endIndex = Math.min(startIndex + planetsPerPage, filteredPlanets.length);
+    const currentPagePlanets = filteredPlanets.slice(startIndex, endIndex);
+    
+    select.innerHTML = `<option value="" disabled selected>Page ${currentPage + 1} - Select a Planet (${startIndex + 1}-${endIndex} of ${filteredPlanets.length})</option>`;
+    
+    currentPagePlanets.forEach((planet, pageIndex) => {
+        const globalIndex = filteredPlanets.indexOf(planet);
         const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `${planet.name} (${planet.system})`;
+        option.value = globalIndex;
+        option.textContent = `${planet.name} (${planet.type}) - ${planet.distance}`;
         select.appendChild(option);
     });
 
-    select.addEventListener('change', (event) => {
-        const selectedIndex = parseInt(event.target.value);
-        if (!isNaN(selectedIndex)) {
-            showPlanet(selectedIndex);
+    select.removeEventListener('change', handlePlanetSelect); // Remove old listener
+    select.addEventListener('change', handlePlanetSelect);
+    
+    updatePaginationInfo();
+}
+
+function handlePlanetSelect(event) {
+    const selectedIndex = parseInt(event.target.value);
+    if (!isNaN(selectedIndex)) {
+        const planetIndex = planets.indexOf(filteredPlanets[selectedIndex]);
+        showPlanet(planetIndex);
+    }
+}
+
+function setupPaginationControls() {
+    // Add pagination controls to the existing UI
+    const controlsContainer = document.querySelector('.controls-section');
+    if (!controlsContainer) return;
+    
+    const paginationHTML = `
+        <div class="pagination-controls" style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.7); border-radius: 10px;">
+            <div class="filter-section" style="margin-bottom: 10px;">
+                <label style="color: #00d4ff; margin-right: 10px;">Filter by type:</label>
+                <select id="planet-type-filter" style="padding: 5px; background: rgba(0,0,0,0.8); color: white; border: 1px solid #00d4ff; border-radius: 5px;">
+                    <option value="all">All Types (${planets.length})</option>
+                    <option value="Gas Giant">Gas Giant</option>
+                    <option value="Neptune-like">Neptune-like</option>
+                    <option value="Sub-Neptune">Sub-Neptune</option>
+                    <option value="Super-Earth">Super-Earth</option>
+                    <option value="Terrestrial">Terrestrial</option>
+                </select>
+                <select id="planets-per-page" style="margin-left: 10px; padding: 5px; background: rgba(0,0,0,0.8); color: white; border: 1px solid #00d4ff; border-radius: 5px;">
+                    <option value="50">50 per page</option>
+                    <option value="100" selected>100 per page</option>
+                    <option value="200">200 per page</option>
+                </select>
+            </div>
+            <div class="pagination-nav" style="display: flex; align-items: center; justify-content: space-between;">
+                <button id="prev-page" class="nav-btn" style="background: linear-gradient(45deg, #00d4ff, #0099cc); color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer;">◀ Previous</button>
+                <div id="pagination-info" style="color: #00d4ff; font-weight: bold;"></div>
+                <button id="next-page" class="nav-btn" style="background: linear-gradient(45deg, #00d4ff, #0099cc); color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer;">Next ▶</button>
+            </div>
+        </div>
+    `;
+    
+    controlsContainer.insertAdjacentHTML('afterbegin', paginationHTML);
+    
+    // Setup event listeners
+    document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 0) {
+            currentPage--;
+            updatePlanetSelect();
         }
     });
+    
+    document.getElementById('next-page').addEventListener('click', () => {
+        const maxPages = Math.ceil(filteredPlanets.length / planetsPerPage);
+        if (currentPage < maxPages - 1) {
+            currentPage++;
+            updatePlanetSelect();
+        }
+    });
+    
+    document.getElementById('planet-type-filter').addEventListener('change', (e) => {
+        currentFilter = e.target.value;
+        currentPage = 0; // Reset to first page
+        applyFilter();
+        updatePlanetSelect();
+    });
+    
+    document.getElementById('planets-per-page').addEventListener('change', (e) => {
+        planetsPerPage = parseInt(e.target.value);
+        currentPage = 0; // Reset to first page
+        updatePlanetSelect();
+    });
+}
+
+function applyFilter() {
+    if (currentFilter === 'all') {
+        filteredPlanets = [...planets];
+    } else {
+        filteredPlanets = planets.filter(planet => planet.type === currentFilter);
+    }
+    
+    // Update filter dropdown with counts
+    const filterSelect = document.getElementById('planet-type-filter');
+    if (filterSelect) {
+        const typeCounts = {};
+        planets.forEach(p => {
+            typeCounts[p.type] = (typeCounts[p.type] || 0) + 1;
+        });
+        
+        filterSelect.innerHTML = `
+            <option value="all">All Types (${planets.length})</option>
+            <option value="Gas Giant">Gas Giant (${typeCounts['Gas Giant'] || 0})</option>
+            <option value="Neptune-like">Neptune-like (${typeCounts['Neptune-like'] || 0})</option>
+            <option value="Sub-Neptune">Sub-Neptune (${typeCounts['Sub-Neptune'] || 0})</option>
+            <option value="Super-Earth">Super-Earth (${typeCounts['Super-Earth'] || 0})</option>
+            <option value="Terrestrial">Terrestrial (${typeCounts['Terrestrial'] || 0})</option>
+        `;
+        filterSelect.value = currentFilter;
+    }
+}
+
+function updatePaginationInfo() {
+    const infoElement = document.getElementById('pagination-info');
+    if (!infoElement) return;
+    
+    const totalPages = Math.ceil(filteredPlanets.length / planetsPerPage);
+    infoElement.textContent = `Page ${currentPage + 1} of ${totalPages} (${filteredPlanets.length} planets)`;
+    
+    // Update button states
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+    
+    if (prevBtn) prevBtn.disabled = currentPage === 0;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages - 1;
 }
