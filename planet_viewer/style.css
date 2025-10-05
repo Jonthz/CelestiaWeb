@@ -192,6 +192,11 @@ header p {
     right: 20px;
     max-width: 300px;
     z-index: 50;
+    display: none;
+}
+
+.info-panel.visible {
+    display: block;
 }
 
 .info-content {
@@ -202,23 +207,7 @@ header p {
     backdrop-filter: blur(15px);
 }
 
-.toggle-btn {
-    background: linear-gradient(135deg, rgba(0, 245, 255, 0.3), rgba(0, 245, 255, 0.1));
-    border: 1px solid rgba(0, 245, 255, 0.5);
-    color: white;
-    padding: 0.8rem 1.2rem;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 1rem;
-    width: 100%;
-    margin-bottom: 1rem;
-}
-
-.toggle-btn:hover {
-    background: linear-gradient(135deg, rgba(0, 245, 255, 0.5), rgba(0, 245, 255, 0.2));
-    border-color: #00f5ff;
-}
+/* Toggle button styles removed - now using control-btn class */
 
 .planet-details {
     transition: all 0.3s ease;

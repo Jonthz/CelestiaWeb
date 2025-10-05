@@ -10,7 +10,7 @@
     <div class="container">
         <div id="loading-screen" class="loading-screen">
             <div class="loading-content">
-                <h2>🌌 Loading Exoplanets...</h2>
+                <h2>Loading Exoplanets...</h2>
                 <div class="loading-spinner"></div>
                 <p id="loading-text">Initializing KOI candidate data...</p>
             </div>
@@ -20,8 +20,8 @@
             <h1>Planet Viewer - Celestia Web</h1>
             <p>Explore individual exoplanets in detail</p>
             <div class="nav-links">
-                <a href="../index.html" class="nav-link">🏠 Home</a>
-                <a href="../solar_view/" class="nav-link">🌌 Solar Systems</a>
+                <a href="../index.html" class="nav-link">Home</a>
+                <a href="../solar_view/" class="nav-link" style="display: none;">Solar Systems</a>
             </div>
             <div id="planet-counter" class="planet-counter">
                 <span id="current-planet-index">1</span> / <span id="total-planets">0</span>
@@ -32,29 +32,28 @@
         
         <div class="navigation-controls">
             <button id="prev-planet" class="nav-btn">
-                <span class="arrow">⬅️</span>
+                <span class="arrow">←</span>
                 <span class="text">Previous Planet</span>
             </button>
-            
+
             <div class="planet-info-compact">
                 <h2 id="current-planet-name">Loading...</h2>
                 <p id="current-planet-system">System: -</p>
                 <p id="current-planet-type">Type: -</p>
             </div>
-            
+
             <button id="next-planet" class="nav-btn">
                 <span class="text">Next Planet</span>
-                <span class="arrow">➡️</span>
+                <span class="arrow">→</span>
             </button>
         </div>
         
         <div id="info-panel" class="info-panel">
             <div class="info-content">
-                <button id="toggle-info" class="toggle-btn">ℹ️ Details</button>
                 <div id="planet-details" class="planet-details hidden">
                     <h3 id="planet-name-detail"></h3>
                     <div class="detail-grid">
-                        <div class="detail-item">
+                        <div class="detail-item" style="display: none;">
                             <span class="label">Mass:</span>
                             <span id="planet-mass" class="value">-</span>
                         </div>
@@ -66,11 +65,11 @@
                             <span class="label">System:</span>
                             <span id="planet-system" class="value">-</span>
                         </div>
-                        <div class="detail-item">
+                        <div class="detail-item" style="display: none;">
                             <span class="label">Discovery:</span>
                             <span id="planet-discovery" class="value">-</span>
                         </div>
-                        <div class="detail-item">
+                        <div class="detail-item" style="display: none;">
                             <span class="label">Habitable:</span>
                             <span id="planet-habitable" class="value">-</span>
                         </div>
@@ -114,12 +113,14 @@
         <div class="controls">
             <p>Use mouse to rotate around the planet. Arrow keys or navigation buttons to switch planets.</p>
             <div class="control-buttons">
-                <button id="compare-planets-btn" class="control-btn">📊 Compare Planets</button>
-                <button id="auto-rotate-btn" class="control-btn">🔄 Auto Rotate</button>
-                <button id="reset-camera-btn" class="control-btn">📷 Reset View</button>
-                <button id="show-star-btn" class="control-btn">⭐ Toggle Star</button>
+                <button id="toggle-info" class="control-btn">Details</button>
+                <button id="compare-planets-btn" class="control-btn">Compare Planets</button>
+                <button id="auto-rotate-btn" class="control-btn">Auto Rotate</button>
+                <button id="reset-camera-btn" class="control-btn">Reset View</button>
+                <button id="show-star-btn" class="control-btn">Toggle Star</button>
             </div>
         </div>
+
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>

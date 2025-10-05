@@ -16,25 +16,25 @@ init();
 async function init() {
     updateLoadingText("Loading planet data...");
     await loadPlanetData();
-    
+
     updateLoadingText("Setting up 3D environment...");
     setupScene();
     setupCamera();
     setupRenderer();
     setupControls();
     setupLighting();
-    
+
     updateLoadingText("Initializing controls...");
     setupEventListeners();
-    
+
     if (planets.length > 0) {
         updateLoadingText("Generating first planet...");
         showPlanet(0);
     }
-    
+
     updateUI();
     hideLoadingScreen();
-    
+
     // Start animation loop
     animate();
 }
@@ -96,7 +96,6 @@ async function loadPlanetData() {
                     name: planet.name,
                     system: planet.system,
                     type: planet.type,
-                    mass: planet.mass,
                     discoveryYear: planet.discoveryYear,
                     mission: planet.mission,
                     status: planet.status,
@@ -275,48 +274,53 @@ function setupControls() {
 }
 
 function setupLighting() {
-    // Ambient light
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+    // Ambient light (increased brightness)
+    const ambientLight = new THREE.AmbientLight(0x606060, 0.6);
     scene.add(ambientLight);
-    
-    // Star light (main light source)
-    const starLight = new THREE.DirectionalLight(0xffffff, 1);
+
+    // Star light (main light source - increased intensity)
+    const starLight = new THREE.DirectionalLight(0xffffff, 1.5);
     starLight.position.set(-20, 0, 0);
     starLight.castShadow = true;
     starLight.shadow.mapSize.width = 2048;
     starLight.shadow.mapSize.height = 2048;
     scene.add(starLight);
-    
-    // Additional rim lighting
-    const rimLight = new THREE.DirectionalLight(0x4488ff, 0.3);
+
+    // Additional rim lighting (increased)
+    const rimLight = new THREE.DirectionalLight(0x4488ff, 0.5);
     rimLight.position.set(20, 10, 10);
     scene.add(rimLight);
 }
 
 function createBackgroundStar() {
+    const textureLoader = new THREE.TextureLoader();
+
+    // Load sun texture
+    const sunTexture = textureLoader.load('../textures/2k_sun.jpg');
+
     const starGeometry = new THREE.SphereGeometry(3, 32, 32);
-    const starMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0xffdd44,
+    const starMaterial = new THREE.MeshBasicMaterial({
+        map: sunTexture,
         transparent: true,
-        opacity: 0.8
+        opacity: 1.0
     });
-    
-    // Add corona effect
+
+    // Add corona/glow effect
     const coronaGeometry = new THREE.SphereGeometry(4, 32, 32);
     const coronaMaterial = new THREE.MeshBasicMaterial({
         color: 0xff8844,
         transparent: true,
-        opacity: 0.3
+        opacity: 0.2
     });
-    
+
     star = new THREE.Group();
     const starCore = new THREE.Mesh(starGeometry, starMaterial);
     const corona = new THREE.Mesh(coronaGeometry, coronaMaterial);
-    
+
     star.add(starCore);
     star.add(corona);
     star.position.set(-25, 0, 0);
-    
+
     scene.add(star);
 }
 
@@ -525,6 +529,57 @@ function addSurfaceDetails(context, planetType) {
     context.putImageData(imageData, 0, 0);
 }
 
+// Available textures in the textures folder
+const availableTextures = [
+    'GJ_504_b.jpg',
+    'HAT-P-11_b.jpg',
+    'HD_189733_b.jpg',
+    'Kepler-22_b.jpg',
+    'Kepler-452_b.jpg',
+    'Kepler-7_b.jpg',
+    'OGLE-2005-BLG-390L_b.jpg',
+    'Proxima_Cen_b.jpg',
+    'YZ_Cet_d.jpg'
+];
+
+function loadPlanetTexture(planetData) {
+    const textureLoader = new THREE.TextureLoader();
+
+    // Check if planet has a texture field
+    if (planetData.texture) {
+        const texturePath = `../textures/${planetData.texture}`;
+
+        // Check if the texture exists in our available textures
+        if (availableTextures.includes(planetData.texture)) {
+            console.log(`Loading texture: ${texturePath}`);
+            return textureLoader.load(
+                texturePath,
+                undefined, // onLoad
+                undefined, // onProgress
+                (error) => {
+                    console.warn(`Failed to load texture ${texturePath}, using fallback`);
+                    return generateRealisticTexture(planetData);
+                }
+            );
+        }
+    }
+
+    // If no texture or texture doesn't exist, assign random one
+    const randomTexture = availableTextures[Math.floor(Math.random() * availableTextures.length)];
+    const randomPath = `../textures/${randomTexture}`;
+    console.log(`Using random texture: ${randomPath} for planet ${planetData.name}`);
+
+    return textureLoader.load(
+        randomPath,
+        undefined,
+        undefined,
+        (error) => {
+            console.warn(`Failed to load random texture ${randomPath}, using procedural texture`);
+            return generateRealisticTexture(planetData);
+        }
+    );
+}
+
 function createPlanet(planetData) {
     // Scale planet size based on radius
     const baseSize = planetSize;
@@ -534,7 +589,7 @@ function createPlanet(planetData) {
     const actualSize = baseSize * scaleFactor;
 
     const geometry = new THREE.SphereGeometry(actualSize, 64, 64);
-    const texture = generateRealisticTexture(planetData);
+    const texture = loadPlanetTexture(planetData);
 
     // Enhanced material with better lighting
     const material = new THREE.MeshPhongMaterial({
@@ -675,7 +730,7 @@ function updatePlanetInfo() {
     
     // Update detailed info
     document.getElementById('planet-name-detail').textContent = currentPlanet.name;
-    document.getElementById('planet-mass').textContent = currentPlanet.mass;
+    //document.getElementById('planet-mass').textContent = currentPlanet.mass;
     
     // Calculate distance from orbital parameters if not provided
     const distance = currentPlanet.distance || 
@@ -749,29 +804,37 @@ function previousPlanet() {
 }
 
 function toggleInfo() {
+    const panel = document.getElementById('info-panel');
     const details = document.getElementById('planet-details');
     const button = document.getElementById('toggle-info');
-    
+
     if (details.classList.contains('hidden')) {
+        panel.classList.add('visible');
         details.classList.remove('hidden');
         details.classList.add('fade-in');
-        button.textContent = '❌ Hide Details';
+        button.textContent = 'Hide Details';
     } else {
         details.classList.add('hidden');
-        button.textContent = 'ℹ️ Details';
+        button.textContent = 'Details';
+        // Delay hiding the panel to allow fade animation
+        setTimeout(() => {
+            if (details.classList.contains('hidden')) {
+                panel.classList.remove('visible');
+            }
+        }, 300);
     }
 }
 
 function toggleAutoRotate() {
     autoRotate = !autoRotate;
     const button = document.getElementById('auto-rotate-btn');
-    
+
     if (autoRotate) {
         button.classList.add('active');
-        button.textContent = '⏸️ Stop Rotate';
+        button.textContent = 'Stop Rotate';
     } else {
         button.classList.remove('active');
-        button.textContent = '🔄 Auto Rotate';
+        button.textContent = 'Auto Rotate';
     }
 }
 
@@ -784,9 +847,9 @@ function resetCamera() {
 function toggleStar() {
     showStar = !showStar;
     star.visible = showStar;
-    
+
     const button = document.getElementById('show-star-btn');
-    button.textContent = showStar ? '🌑 Hide Star' : '⭐ Show Star';
+    button.textContent = showStar ? 'Hide Star' : 'Show Star';
 }
 
 function setupEventListeners() {
@@ -802,7 +865,7 @@ function setupEventListeners() {
     document.getElementById('auto-rotate-btn').addEventListener('click', toggleAutoRotate);
     document.getElementById('reset-camera-btn').addEventListener('click', resetCamera);
     document.getElementById('show-star-btn').addEventListener('click', toggleStar);
-    
+
     // Keyboard navigation
     document.addEventListener('keydown', (event) => {
         switch(event.code) {
@@ -903,3 +966,4 @@ function animate() {
     controls.update();
     renderer.render(scene, camera);
 }
+

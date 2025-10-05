@@ -173,18 +173,18 @@ function setupViewer(viewer, containerId) {
     viewer.controls.minDistance = 3;
     viewer.controls.maxDistance = 40;
     
-    // Setup lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+    // Setup lighting (increased brightness)
+    const ambientLight = new THREE.AmbientLight(0x606060, 0.6);
     viewer.scene.add(ambientLight);
-    
-    const starLight = new THREE.DirectionalLight(0xffffff, 1);
+
+    const starLight = new THREE.DirectionalLight(0xffffff, 1.5);
     starLight.position.set(-20, 0, 0);
     starLight.castShadow = true;
     starLight.shadow.mapSize.width = 2048;
     starLight.shadow.mapSize.height = 2048;
     viewer.scene.add(starLight);
-    
-    const rimLight = new THREE.DirectionalLight(0x4488ff, 0.3);
+
+    const rimLight = new THREE.DirectionalLight(0x4488ff, 0.5);
     rimLight.position.set(20, 10, 10);
     viewer.scene.add(rimLight);
 }
@@ -271,24 +271,29 @@ function createStarfield(viewer) {
 }
 
 function createBackgroundStar(viewer) {
+    const textureLoader = new THREE.TextureLoader();
+
+    // Load sun texture
+    const sunTexture = textureLoader.load('../textures/2k_sun.jpg');
+
     const starGeometry = new THREE.SphereGeometry(3, 32, 32);
-    const starMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0xffdd44,
+    const starMaterial = new THREE.MeshBasicMaterial({
+        map: sunTexture,
         transparent: true,
-        opacity: 0.8
+        opacity: 1.0
     });
-    
+
     const coronaGeometry = new THREE.SphereGeometry(4, 32, 32);
     const coronaMaterial = new THREE.MeshBasicMaterial({
         color: 0xff8844,
         transparent: true,
-        opacity: 0.3
+        opacity: 0.2
     });
-    
+
     viewer.star = new THREE.Group();
     const starCore = new THREE.Mesh(starGeometry, starMaterial);
     const corona = new THREE.Mesh(coronaGeometry, coronaMaterial);
-    
+
     viewer.star.add(starCore);
     viewer.star.add(corona);
     viewer.star.position.set(-25, 0, 0);
@@ -469,6 +474,57 @@ function addSurfaceDetails(context, planetType) {
     context.putImageData(imageData, 0, 0);
 }
 
+// Available textures in the textures folder
+const availableTextures = [
+    'GJ_504_b.jpg',
+    'HAT-P-11_b.jpg',
+    'HD_189733_b.jpg',
+    'Kepler-22_b.jpg',
+    'Kepler-452_b.jpg',
+    'Kepler-7_b.jpg',
+    'OGLE-2005-BLG-390L_b.jpg',
+    'Proxima_Cen_b.jpg',
+    'YZ_Cet_d.jpg'
+];
+
+function loadPlanetTexture(planetData) {
+    const textureLoader = new THREE.TextureLoader();
+
+    // Check if planet has a texture field
+    if (planetData.texture) {
+        const texturePath = `../textures/${planetData.texture}`;
+
+        // Check if the texture exists in our available textures
+        if (availableTextures.includes(planetData.texture)) {
+            console.log(`Loading texture: ${texturePath}`);
+            return textureLoader.load(
+                texturePath,
+                undefined, // onLoad
+                undefined, // onProgress
+                (error) => {
+                    console.warn(`Failed to load texture ${texturePath}, using fallback`);
+                    return generateRealisticTexture(planetData);
+                }
+            );
+        }
+    }
+
+    // If no texture or texture doesn't exist, assign random one
+    const randomTexture = availableTextures[Math.floor(Math.random() * availableTextures.length)];
+    const randomPath = `../textures/${randomTexture}`;
+    console.log(`Using random texture: ${randomPath} for planet ${planetData.name}`);
+
+    return textureLoader.load(
+        randomPath,
+        undefined,
+        undefined,
+        (error) => {
+            console.warn(`Failed to load random texture ${randomPath}, using procedural texture`);
+            return generateRealisticTexture(planetData);
+        }
+    );
+}
+
 function createPlanet(planetData) {
     const baseSize = planetSize;
     const radius = planetData.radius || 6371;
@@ -477,7 +533,7 @@ function createPlanet(planetData) {
     const actualSize = baseSize * scaleFactor;
 
     const geometry = new THREE.SphereGeometry(actualSize, 64, 64);
-    const texture = generateRealisticTexture(planetData);
+    const texture = loadPlanetTexture(planetData);
     const material = new THREE.MeshPhongMaterial({
         map: texture,
         transparent: false,
@@ -581,26 +637,23 @@ function showPlanet(viewer, index) {
 
 function updatePlanetInfo(viewer) {
     if (!viewer.currentPlanet) return;
-    
+
     const side = viewer.side;
     document.getElementById(`${side}-planet-name`).textContent = viewer.currentPlanet.name;
-    document.getElementById(`${side}-mass`).textContent = viewer.currentPlanet.mass || 'Unknown';
     document.getElementById(`${side}-type`).textContent = viewer.currentPlanet.type || 'Unknown';
     document.getElementById(`${side}-system`).textContent = viewer.currentPlanet.system || 'Unknown';
-    
-    const distance = viewer.currentPlanet.distance || 
+
+    const distance = viewer.currentPlanet.distance ||
         `${(viewer.currentPlanet.ellipticalOrbit.semiMajorAxis * 149.6).toFixed(2)} million km`;
     document.getElementById(`${side}-distance`).textContent = distance;
-    
-    document.getElementById(`${side}-discovery`).textContent = viewer.currentPlanet.discoveryYear || 'Unknown';
+
     document.getElementById(`${side}-mission`).textContent = viewer.currentPlanet.mission || 'Unknown';
     document.getElementById(`${side}-status`).textContent = viewer.currentPlanet.status || 'Unknown';
-    document.getElementById(`${side}-confidence`).textContent = viewer.currentPlanet.confidence ? 
+    document.getElementById(`${side}-confidence`).textContent = viewer.currentPlanet.confidence ?
         (viewer.currentPlanet.confidence * 100).toFixed(1) + '%' : 'N/A';
-    document.getElementById(`${side}-habitable`).textContent = viewer.currentPlanet.inHabitableZone ? 'Yes' : 'No';
-    document.getElementById(`${side}-period`).textContent = 
+    document.getElementById(`${side}-period`).textContent =
         viewer.currentPlanet.ellipticalOrbit.period.toFixed(3) + ' days';
-    
+
     const radiusKm = viewer.currentPlanet.radius.toLocaleString();
     document.getElementById(`${side}-radius`).textContent = `${radiusKm} km`;
     document.getElementById(`${side}-id`).textContent = viewer.currentPlanet.id;
@@ -687,12 +740,12 @@ function setupEventListeners() {
 function toggleInfo(viewer) {
     const infoPanel = document.getElementById(`${viewer.side}-info`);
     infoPanel.classList.toggle('collapsed');
-    
+
     const button = document.getElementById(`${viewer.side}-toggle-info`);
     if (infoPanel.classList.contains('collapsed')) {
-        button.textContent = 'ℹ️ Show Details';
+        button.textContent = 'Show Details';
     } else {
-        button.textContent = '❌ Hide Details';
+        button.textContent = 'Hide Details';
     }
 }
 

@@ -614,12 +614,9 @@ function onMouseClick(event) {
 // Show planet information panel
 function showPlanetInfo(planetData) {
     document.getElementById('planet-name').textContent = planetData.name;
-    document.getElementById('planet-mass').textContent = planetData.mass;
     document.getElementById('planet-distance').textContent = planetData.distance;
     document.getElementById('planet-type').textContent = planetData.type;
     document.getElementById('planet-system').textContent = planetData.system || 'Unknown';
-    document.getElementById('planet-discovery').textContent = planetData.discoveryYear || 'Unknown';
-    document.getElementById('planet-habitable').textContent = planetData.inHabitableZone ? 'Yes' : 'No';
     
     // Mission data
     document.getElementById('planet-mission').textContent = planetData.mission || 'Unknown';
@@ -632,16 +629,6 @@ function showPlanetInfo(planetData) {
     document.getElementById('planet-depth').textContent = planetData.transitDepth ? 
         planetData.transitDepth.toExponential(2) : 'N/A';
     document.getElementById('planet-duration').textContent = planetData.transitDuration || 'N/A';
-    
-    // Highlight planets in habitable zone
-    const habitableSpan = document.getElementById('planet-habitable');
-    if (planetData.inHabitableZone) {
-        habitableSpan.style.color = '#2ecc71';
-        habitableSpan.style.fontWeight = 'bold';
-    } else {
-        habitableSpan.style.color = '#e74c3c';
-        habitableSpan.style.fontWeight = 'normal';
-    }
     
     // Color-code status
     const statusSpan = document.getElementById('planet-status');

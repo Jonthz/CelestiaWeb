@@ -53,7 +53,6 @@ function parseEntry(entry) {
         name: `KOI-${id.replace('K', '').replace('.', '.')}`,
         system: star.replace('Star-', ''),
         type: "Unknown",
-        mass: "Unknown",
         discoveryYear: 2024,
         mission: "Kepler",
         status: "candidate",
@@ -112,7 +111,7 @@ function parseEntry(entry) {
     planet.type = determinePlanetType(planet.radius);
     
     // Estimate mass based on radius and type
-    planet.mass = estimateMass(planet.radius, planet.type);
+    //planet.mass = estimateMass(planet.radius, planet.type);
     
     // Check if in habitable zone (rough estimate based on semi-major axis)
     planet.inHabitableZone = isInHabitableZone(planet.ellipticalOrbit.semiMajorAxis);
@@ -127,12 +126,11 @@ function determinePlanetType(radius) {
     const earthRadius = 6371; // km
     const relativeSize = radius / earthRadius;
     
-    if (relativeSize > 11) return "Gas Giant";
-    if (relativeSize > 4) return "Hot Jupiter";
-    if (relativeSize > 1.8) return "Sub-Neptune";
-    if (relativeSize > 1.25) return "Super-Earth";
-    if (relativeSize > 0.5) return "Rocky";
-    return "Small Rocky";
+    if (relativeSize > 10) return "Gas Giant";
+    if (relativeSize > 4) return "Neptune-like";
+    if (relativeSize > 2) return "Sub-Neptune";  // ✅ Real category
+    if (relativeSize > 1.5) return "Super-Earth";
+    return "Terrestrial";  // Covers Earth-sized and smaller
 }
 
 function estimateMass(radius, type) {

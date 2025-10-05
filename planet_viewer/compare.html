@@ -311,7 +311,7 @@
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
         <div class="loading-content">
-            <h2>🌌 Loading Planet Comparison...</h2>
+            <h2>Loading Planet Comparison...</h2>
             <div class="loading-spinner"></div>
             <p id="loading-text">Initializing KOI candidate data...</p>
         </div>
@@ -341,7 +341,7 @@
                     type="text" 
                     id="left-search" 
                     class="search-dropdown" 
-                    placeholder="🔍 Search planet by name or ID..."
+                    placeholder="Search planet by name or ID..."
                     autocomplete="off"
                 />
                 <div id="left-dropdown" style="display: none;"></div>
@@ -349,20 +349,20 @@
 
             <!-- Navigation -->
             <div class="navigation-bar">
-                <button id="left-prev" class="nav-button">⬅️ Prev</button>
+                <button id="left-prev" class="nav-button">← Prev</button>
                 <span class="planet-counter">
                     <span id="left-counter">1</span> / <span id="left-total">0</span>
                 </span>
-                <button id="left-next" class="nav-button">Next ➡️</button>
+                <button id="left-next" class="nav-button">Next →</button>
             </div>
 
             <!-- Info Panel -->
             <div id="left-info" class="viewer-info-panel">
-                <button id="left-toggle-info" class="info-toggle-btn">ℹ️ Details</button>
+                <button id="left-toggle-info" class="info-toggle-btn">Details</button>
                 <div id="left-details" class="info-content">
                     <h3 id="left-planet-name" style="color: #00d4ff; margin-bottom: 10px;">-</h3>
                     <div class="info-grid">
-                        <div class="info-item">
+                        <div class="info-item" style="display: none;">
                             <span class="info-label">Mass:</span>
                             <span id="left-mass" class="info-value">-</span>
                         </div>
@@ -378,7 +378,7 @@
                             <span class="info-label">Distance:</span>
                             <span id="left-distance" class="info-value">-</span>
                         </div>
-                        <div class="info-item">
+                        <div class="info-item" style="display: none;">
                             <span class="info-label">Discovery:</span>
                             <span id="left-discovery" class="info-value">-</span>
                         </div>
@@ -394,7 +394,7 @@
                             <span class="info-label">Confidence:</span>
                             <span id="left-confidence" class="info-value">-</span>
                         </div>
-                        <div class="info-item">
+                        <div class="info-item" style="display: none;">
                             <span class="info-label">Habitable:</span>
                             <span id="left-habitable" class="info-value">-</span>
                         </div>
@@ -416,8 +416,8 @@
 
             <!-- Individual Controls -->
             <div class="viewer-controls">
-                <button id="left-auto-rotate" class="control-btn-small active">🔄 Auto Rotate</button>
-                <button id="left-reset" class="control-btn-small">📷 Reset View</button>
+                <button id="left-auto-rotate" class="control-btn-small active">Auto Rotate</button>
+                <button id="left-reset" class="control-btn-small">Reset View</button>
             </div>
         </div>
 
@@ -434,7 +434,7 @@
                     type="text" 
                     id="right-search" 
                     class="search-dropdown" 
-                    placeholder="🔍 Search planet by name or ID..."
+                    placeholder="Search planet by name or ID..."
                     autocomplete="off"
                 />
                 <div id="right-dropdown" style="display: none;"></div>
@@ -442,20 +442,20 @@
 
             <!-- Navigation -->
             <div class="navigation-bar">
-                <button id="right-prev" class="nav-button">⬅️ Prev</button>
+                <button id="right-prev" class="nav-button">← Prev</button>
                 <span class="planet-counter">
                     <span id="right-counter">2</span> / <span id="right-total">0</span>
                 </span>
-                <button id="right-next" class="nav-button">Next ➡️</button>
+                <button id="right-next" class="nav-button">Next →</button>
             </div>
 
             <!-- Info Panel -->
             <div id="right-info" class="viewer-info-panel">
-                <button id="right-toggle-info" class="info-toggle-btn">ℹ️ Details</button>
+                <button id="right-toggle-info" class="info-toggle-btn">Details</button>
                 <div id="right-details" class="info-content">
                     <h3 id="right-planet-name" style="color: #00d4ff; margin-bottom: 10px;">-</h3>
                     <div class="info-grid">
-                        <div class="info-item">
+                        <div class="info-item" style="display: none;">
                             <span class="info-label">Mass:</span>
                             <span id="right-mass" class="info-value">-</span>
                         </div>
@@ -471,7 +471,7 @@
                             <span class="info-label">Distance:</span>
                             <span id="right-distance" class="info-value">-</span>
                         </div>
-                        <div class="info-item">
+                        <div class="info-item" style="display: none;">
                             <span class="info-label">Discovery:</span>
                             <span id="right-discovery" class="info-value">-</span>
                         </div>
@@ -487,7 +487,7 @@
                             <span class="info-label">Confidence:</span>
                             <span id="right-confidence" class="info-value">-</span>
                         </div>
-                        <div class="info-item">
+                        <div class="info-item" style="display: none;">
                             <span class="info-label">Habitable:</span>
                             <span id="right-habitable" class="info-value">-</span>
                         </div>
@@ -509,16 +509,16 @@
 
             <!-- Individual Controls -->
             <div class="viewer-controls">
-                <button id="right-auto-rotate" class="control-btn-small active">🔄 Auto Rotate</button>
-                <button id="right-reset" class="control-btn-small">📷 Reset View</button>
+                <button id="right-auto-rotate" class="control-btn-small active">Auto Rotate</button>
+                <button id="right-reset" class="control-btn-small">Reset View</button>
             </div>
         </div>
     </div>
 
     <!-- Bottom Bar (Shared Controls) -->
     <div class="bottom-bar">
-        <button id="sync-rotation" class="shared-control-btn">🔄 Sync Rotation</button>
-        <button id="reset-both" class="shared-control-btn">📷 Reset Both Cameras</button>
+        <button id="sync-rotation" class="shared-control-btn">Sync Rotation</button>
+        <button id="reset-both" class="shared-control-btn">Reset Both Cameras</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
