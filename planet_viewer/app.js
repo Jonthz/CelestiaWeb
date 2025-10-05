@@ -4,12 +4,12 @@ let planets = [];
 let currentPlanetIndex = 0;
 let star;
 let showStar = true;
-let autoRotate = false;
+let autoRotate = true;
 let planetMesh;
 let rotationAxisLine = null;
 
 const planetSize = 2;
-const cameraDistance = 8;
+const cameraDistance = 20;
 
 init();
 
