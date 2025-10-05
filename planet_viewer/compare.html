@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planet Comparison - Celestia Web</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Comparison-specific styles */
+        .comparison-container {
+            display: flex;
+            width: 100vw;
+            height: calc(100vh - 140px);
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+
+        .back-button {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(52, 73, 94, 0.3);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 73, 94, 0.4);
+        }
+
+        .page-title {
+            color: #00d4ff;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .viewer-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            margin-top: 60px;
+        }
+
+        .viewer-container:first-child {
+            border-right: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .viewer-container.focused {
+            box-shadow: inset 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .scene-wrapper {
+            flex: 1;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .viewer-scene {
+            width: 100%;
+            height: 100%;
+        }
+
+        .planet-selector {
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .search-dropdown {
+            width: 100%;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(0, 212, 255, 0.5);
+            border-radius: 5px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .search-dropdown:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 5px rgba(0, 212, 255, 0.5);
+        }
+
+        .navigation-bar {
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .nav-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .planet-counter {
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .viewer-info-panel {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .viewer-info-panel.collapsed {
+            max-height: 50px;
+            overflow: hidden;
+        }
+
+        .info-toggle-btn {
+            width: 100%;
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            border: 1px solid #00d4ff;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .info-toggle-btn:hover {
+            background: rgba(0, 212, 255, 0.3);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .info-item {
+            font-size: 12px;
+        }
+
+        .info-label {
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .info-value {
+            color: white;
+        }
+
+        .viewer-controls {
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-btn-small {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn-small:hover {
+            transform: translateY(-2px);
+        }
+
+        .control-btn-small.active {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+        }
+
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .shared-control-btn {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+        }
+
+        .shared-control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(155, 89, 182, 0.5);
+        }
+
+        .shared-control-btn.active {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+        }
+
+        /* Loading screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: #00d4ff;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(0, 212, 255, 0.3);
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar styling */
+        .viewer-info-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .viewer-info-panel::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .viewer-info-panel::-webkit-scrollbar-thumb {
+            background: #00d4ff;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <h2>🌌 Loading Planet Comparison...</h2>
+            <div class="loading-spinner"></div>
+            <p id="loading-text">Initializing KOI candidate data...</p>
+        </div>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <button class="back-button" onclick="window.location.href='index.html'">
+            ← Back to Single Viewer
+        </button>
+        <h1 class="page-title">Planet Comparison View</h1>
+        <div style="width: 200px;"></div> <!-- Spacer for centering -->
+    </div>
+
+    <!-- Main Comparison Container -->
+    <div class="comparison-container">
+        <!-- Left Viewer -->
+        <div id="left-viewer" class="viewer-container focused">
+            <!-- 3D Scene -->
+            <div class="scene-wrapper">
+                <div id="left-scene" class="viewer-scene"></div>
+            </div>
+
+            <!-- Planet Selector -->
+            <div class="planet-selector">
+                <input 
+                    type="text" 
+                    id="left-search" 
+                    class="search-dropdown" 
+                    placeholder="🔍 Search planet by name or ID..."
+                    autocomplete="off"
+                />
+                <div id="left-dropdown" style="display: none;"></div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="navigation-bar">
+                <button id="left-prev" class="nav-button">⬅️ Prev</button>
+                <span class="planet-counter">
+                    <span id="left-counter">1</span> / <span id="left-total">0</span>
+                </span>
+                <button id="left-next" class="nav-button">Next ➡️</button>
+            </div>
+
+            <!-- Info Panel -->
+            <div id="left-info" class="viewer-info-panel">
+                <button id="left-toggle-info" class="info-toggle-btn">ℹ️ Details</button>
+                <div id="left-details" class="info-content">
+                    <h3 id="left-planet-name" style="color: #00d4ff; margin-bottom: 10px;">-</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Mass:</span>
+                            <span id="left-mass" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Type:</span>
+                            <span id="left-type" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">System:</span>
+                            <span id="left-system" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Distance:</span>
+                            <span id="left-distance" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Discovery:</span>
+                            <span id="left-discovery" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Mission:</span>
+                            <span id="left-mission" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status:</span>
+                            <span id="left-status" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Confidence:</span>
+                            <span id="left-confidence" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Habitable:</span>
+                            <span id="left-habitable" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Period:</span>
+                            <span id="left-period" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Radius:</span>
+                            <span id="left-radius" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Kepler ID:</span>
+                            <span id="left-id" class="info-value">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Individual Controls -->
+            <div class="viewer-controls">
+                <button id="left-auto-rotate" class="control-btn-small active">🔄 Auto Rotate</button>
+                <button id="left-reset" class="control-btn-small">📷 Reset View</button>
+            </div>
+        </div>
+
+        <!-- Right Viewer -->
+        <div id="right-viewer" class="viewer-container">
+            <!-- 3D Scene -->
+            <div class="scene-wrapper">
+                <div id="right-scene" class="viewer-scene"></div>
+            </div>
+
+            <!-- Planet Selector -->
+            <div class="planet-selector">
+                <input 
+                    type="text" 
+                    id="right-search" 
+                    class="search-dropdown" 
+                    placeholder="🔍 Search planet by name or ID..."
+                    autocomplete="off"
+                />
+                <div id="right-dropdown" style="display: none;"></div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="navigation-bar">
+                <button id="right-prev" class="nav-button">⬅️ Prev</button>
+                <span class="planet-counter">
+                    <span id="right-counter">2</span> / <span id="right-total">0</span>
+                </span>
+                <button id="right-next" class="nav-button">Next ➡️</button>
+            </div>
+
+            <!-- Info Panel -->
+            <div id="right-info" class="viewer-info-panel">
+                <button id="right-toggle-info" class="info-toggle-btn">ℹ️ Details</button>
+                <div id="right-details" class="info-content">
+                    <h3 id="right-planet-name" style="color: #00d4ff; margin-bottom: 10px;">-</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Mass:</span>
+                            <span id="right-mass" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Type:</span>
+                            <span id="right-type" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">System:</span>
+                            <span id="right-system" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Distance:</span>
+                            <span id="right-distance" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Discovery:</span>
+                            <span id="right-discovery" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Mission:</span>
+                            <span id="right-mission" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status:</span>
+                            <span id="right-status" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Confidence:</span>
+                            <span id="right-confidence" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Habitable:</span>
+                            <span id="right-habitable" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Period:</span>
+                            <span id="right-period" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Radius:</span>
+                            <span id="right-radius" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Kepler ID:</span>
+                            <span id="right-id" class="info-value">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Individual Controls -->
+            <div class="viewer-controls">
+                <button id="right-auto-rotate" class="control-btn-small active">🔄 Auto Rotate</button>
+                <button id="right-reset" class="control-btn-small">📷 Reset View</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Bar (Shared Controls) -->
+    <div class="bottom-bar">
+        <button id="sync-rotation" class="shared-control-btn">🔄 Sync Rotation</button>
+        <button id="reset-both" class="shared-control-btn">📷 Reset Both Cameras</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="compare.js"></script>
+</body>
+</html>

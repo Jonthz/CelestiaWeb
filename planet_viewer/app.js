@@ -796,6 +796,9 @@ function setupEventListeners() {
     
     // Control buttons
     document.getElementById('toggle-info').addEventListener('click', toggleInfo);
+    document.getElementById('compare-planets-btn').addEventListener('click', () => {
+        window.location.href = 'compare.html';
+    });
     document.getElementById('auto-rotate-btn').addEventListener('click', toggleAutoRotate);
     document.getElementById('reset-camera-btn').addEventListener('click', resetCamera);
     document.getElementById('show-star-btn').addEventListener('click', toggleStar);
