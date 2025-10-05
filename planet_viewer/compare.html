@@ -10,7 +10,7 @@
         .comparison-container {
             display: flex;
             width: 100vw;
-            height: calc(100vh - 140px);
+            height: calc(100vh - 120px);
             background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
         }
 
@@ -82,7 +82,7 @@
         }
 
         .planet-selector {
-            padding: 10px 15px;
+            padding: 8px 12px;
             background: rgba(0, 0, 0, 0.7);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -104,7 +104,7 @@
         }
 
         .navigation-bar {
-            padding: 10px 15px;
+            padding: 8px 12px;
             background: rgba(0, 0, 0, 0.7);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
@@ -141,14 +141,14 @@
 
         .viewer-info-panel {
             background: rgba(0, 0, 0, 0.8);
-            padding: 15px;
-            max-height: 300px;
+            padding: 10px;
+            max-height: 180px;
             overflow-y: auto;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .viewer-info-panel.collapsed {
-            max-height: 50px;
+            max-height: 40px;
             overflow: hidden;
         }
 
@@ -157,11 +157,12 @@
             background: rgba(0, 212, 255, 0.2);
             color: #00d4ff;
             border: 1px solid #00d4ff;
-            padding: 8px;
+            padding: 6px;
             border-radius: 5px;
             cursor: pointer;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             transition: all 0.3s ease;
+            font-size: 12px;
         }
 
         .info-toggle-btn:hover {
@@ -170,13 +171,15 @@
 
         .info-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 10px;
+            grid-template-columns: 1fr;
+            gap: 5px;
+            margin-top: 8px;
         }
 
         .info-item {
-            font-size: 12px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
         }
 
         .info-label {
@@ -189,10 +192,10 @@
         }
 
         .viewer-controls {
-            padding: 10px 15px;
+            padding: 8px 12px;
             background: rgba(0, 0, 0, 0.7);
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
         }
 
@@ -220,14 +223,14 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 80px;
+            height: 60px;
             background: rgba(0, 0, 0, 0.9);
             backdrop-filter: blur(10px);
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
             z-index: 1000;
         }
 
@@ -235,13 +238,13 @@
             background: linear-gradient(45deg, #9b59b6, #8e44ad);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            font-size: 14px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+            box-shadow: 0 3px 10px rgba(155, 89, 182, 0.3);
         }
 
         .shared-control-btn:hover {
@@ -368,52 +371,28 @@
                 <div id="left-details" class="info-content">
                     <h3 id="left-planet-name" style="color: #00d4ff; margin-bottom: 10px;">-</h3>
                     <div class="info-grid">
-                        <div class="info-item" style="display: none;">
-                            <span class="info-label">Mass:</span>
-                            <span id="left-mass" class="info-value">-</span>
-                        </div>
                         <div class="info-item">
                             <span class="info-label">Type:</span>
                             <span id="left-type" class="info-value">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">System:</span>
-                            <span id="left-system" class="info-value">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Distance:</span>
-                            <span id="left-distance" class="info-value">-</span>
-                        </div>
-                        <div class="info-item" style="display: none;">
-                            <span class="info-label">Discovery:</span>
-                            <span id="left-discovery" class="info-value">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Mission:</span>
-                            <span id="left-mission" class="info-value">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Status:</span>
-                            <span id="left-status" class="info-value">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Confidence:</span>
-                            <span id="left-confidence" class="info-value">-</span>
-                        </div>
-                        <div class="info-item" style="display: none;">
-                            <span class="info-label">Habitable:</span>
-                            <span id="left-habitable" class="info-value">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Period:</span>
-                            <span id="left-period" class="info-value">-</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Radius:</span>
                             <span id="left-radius" class="info-value">-</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Kepler ID:</span>
+                            <span class="info-label">Distance:</span>
+                            <span id="left-distance" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Period:</span>
+                            <span id="left-period" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Confidence:</span>
+                            <span id="left-confidence" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">ID:</span>
                             <span id="left-id" class="info-value">-</span>
                         </div>
                     </div>
@@ -467,52 +446,28 @@
                 <div id="right-details" class="info-content">
                     <h3 id="right-planet-name" style="color: #00d4ff; margin-bottom: 10px;">-</h3>
                     <div class="info-grid">
-                        <div class="info-item" style="display: none;">
-                            <span class="info-label">Mass:</span>
-                            <span id="right-mass" class="info-value">-</span>
-                        </div>
                         <div class="info-item">
                             <span class="info-label">Type:</span>
                             <span id="right-type" class="info-value">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">System:</span>
-                            <span id="right-system" class="info-value">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Distance:</span>
-                            <span id="right-distance" class="info-value">-</span>
-                        </div>
-                        <div class="info-item" style="display: none;">
-                            <span class="info-label">Discovery:</span>
-                            <span id="right-discovery" class="info-value">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Mission:</span>
-                            <span id="right-mission" class="info-value">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Status:</span>
-                            <span id="right-status" class="info-value">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Confidence:</span>
-                            <span id="right-confidence" class="info-value">-</span>
-                        </div>
-                        <div class="info-item" style="display: none;">
-                            <span class="info-label">Habitable:</span>
-                            <span id="right-habitable" class="info-value">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Period:</span>
-                            <span id="right-period" class="info-value">-</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Radius:</span>
                             <span id="right-radius" class="info-value">-</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Kepler ID:</span>
+                            <span class="info-label">Distance:</span>
+                            <span id="right-distance" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Period:</span>
+                            <span id="right-period" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Confidence:</span>
+                            <span id="right-confidence" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">ID:</span>
                             <span id="right-id" class="info-value">-</span>
                         </div>
                     </div>
@@ -535,6 +490,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="compare.js"></script>
+    <script src="compare.js?v=1.1"></script>
 </body>
 </html>

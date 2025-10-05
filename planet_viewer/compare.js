@@ -601,22 +601,8 @@ function createRotationAxis(planetData, planetSize) {
     const axisLine = new THREE.Line(axisGeometry, axisMaterial);
     axisLine.rotation.x = inclinationRadians;
     
-    const poleGeometry = new THREE.SphereGeometry(planetSize * 0.08, 16, 16);
-    const poleMaterial = new THREE.MeshBasicMaterial({
-        color: 0x00ffff,
-        transparent: true,
-        opacity: 0.9
-    });
-    
-    const northPole = new THREE.Mesh(poleGeometry, poleMaterial);
-    const southPole = new THREE.Mesh(poleGeometry, poleMaterial.clone());
-    northPole.position.set(0, axisLength, 0);
-    southPole.position.set(0, -axisLength, 0);
-    
     const axisGroup = new THREE.Group();
     axisGroup.add(axisLine);
-    axisGroup.add(northPole);
-    axisGroup.add(southPole);
     axisGroup.rotation.x = inclinationRadians;
     axisGroup.userData.inclinationDegrees = inclinationDegrees;
     

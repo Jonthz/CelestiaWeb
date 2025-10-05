@@ -640,26 +640,9 @@ function createRotationAxis(planetData, planetSize) {
     // Rotate around the X axis to tilt the axis
     axisLine.rotation.x = inclinationRadians;
 
-    // Create endpoint spheres to mark the poles
-    const poleGeometry = new THREE.SphereGeometry(planetSize * 0.08, 16, 16);
-    const poleMaterial = new THREE.MeshBasicMaterial({
-        color: 0x00ffff,
-        transparent: true,
-        opacity: 0.9
-    });
-
-    const northPole = new THREE.Mesh(poleGeometry, poleMaterial);
-    const southPole = new THREE.Mesh(poleGeometry, poleMaterial.clone());
-
-    // Position poles at the ends of the axis
-    northPole.position.set(0, axisLength, 0);
-    southPole.position.set(0, -axisLength, 0);
-
-    // Create a group to hold the axis and poles
+    // Create a group to hold the axis
     const axisGroup = new THREE.Group();
     axisGroup.add(axisLine);
-    axisGroup.add(northPole);
-    axisGroup.add(southPole);
 
     // Apply the same rotation to the entire group
     axisGroup.rotation.x = inclinationRadians;
