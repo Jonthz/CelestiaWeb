@@ -16,7 +16,7 @@ animate();
 async function init() {
     updateLoadingText("Loading planet data...");
     await loadPlanetData();
-
+    populatePlanetSelect();
     updateLoadingText("Setting up 3D environment...");
     setupScene();
     setupCamera();
@@ -78,6 +78,7 @@ async function loadPlanetData() {
                 // Convert old format to new format
                 planets = fallbackData.map((planet, index) => ({
                     id: `FALLBACK_${index}`,
+                    index: index,
                     star: `Star-${planet.system}`,
                     class: "Planet",
                     radius: planet.type === "Gas Giant" ? 71492 :
@@ -100,6 +101,7 @@ async function loadPlanetData() {
                     confidence: planet.confidence,
                     inHabitableZone: planet.inHabitableZone
                 }));
+
             } catch (fallbackError) {
                 console.error('Error loading fallback data:', fallbackError);
                 planets = [{
@@ -126,6 +128,31 @@ async function loadPlanetData() {
                 }];
             }
         }
+        populatePlanetSelect();
+
+    }
+
+
+    function populatePlanetSelect() {
+        const select = document.getElementById('planet-select');
+        if (!select || !planets) return;
+
+        // Clear existing options
+        select.innerHTML = '<option value="" disabled selected>Select a Planet</option>';
+
+        planets.forEach((planet, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = `${planet.name} (${planet.system})`;
+            select.appendChild(option);
+        });
+
+        select.addEventListener('change', (event) => {
+            const selectedIndex = parseInt(event.target.value);
+            if (!isNaN(selectedIndex)) {
+                showPlanet(selectedIndex);
+            }
+        });
     }
 
     function setupScene() {
@@ -773,4 +800,25 @@ async function loadPlanetData() {
         controls.update();
         renderer.render(scene, camera);
     }
+}
+
+function populatePlanetSelect() {
+    const select = document.getElementById('planet-select');
+    if (!select || !planets) return;
+
+    select.innerHTML = '<option value="" disabled selected>Select a Planet</option>';
+    console.log(planets)
+    planets.forEach((planet, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `${planet.name} (${planet.system})`;
+        select.appendChild(option);
+    });
+
+    select.addEventListener('change', (event) => {
+        const selectedIndex = parseInt(event.target.value);
+        if (!isNaN(selectedIndex)) {
+            showPlanet(selectedIndex);
+        }
+    });
 }
