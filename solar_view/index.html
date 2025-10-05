@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Celestia Web - Solar Systems Explorer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div id="loading-screen" class="loading-screen">
+            <div class="loading-content">
+                <h2>🌌 Loading Solar Systems...</h2>
+                <div class="loading-spinner"></div>
+                <p id="loading-text">Initializing KOI candidate data...</p>
+            </div>
+        </div>
+        
+        <header>
+            <h1>Celestia Web - Solar Systems Explorer</h1>
+            <p>Explore exoplanets in 3D space</p>
+            <div class="nav-links">
+                <a href="../index.html" class="nav-link">🏠 Home</a>
+                <a href="../planet_viewer/" class="nav-link">🪐 Planet Viewer</a>
+            </div>
+            <div class="system-selector">
+                <label for="system-select">Current System:</label>
+                <select id="system-select">
+                    <option value="overview">🌌 Galaxy Overview</option>
+                </select>
+            </div>
+            <div id="system-info" class="system-info hidden">
+                <p><strong>System:</strong> <span id="current-system-name"></span></p>
+                <p><strong>Distance:</strong> <span id="current-system-distance"></span></p>
+                <p><strong>Planets:</strong> <span id="current-system-planets"></span></p>
+            </div>
+        </header>
+        
+        <div id="scene-container"></div>
+        
+        <div id="info-panel" class="info-panel hidden">
+            <div class="info-content">
+                <button id="close-info" class="close-btn">&times;</button>
+                <h2 id="planet-name"></h2>
+                <div class="planet-details">
+                    <p><strong>Mass:</strong> <span id="planet-mass"></span></p>
+                    <p><strong>Distance:</strong> <span id="planet-distance"></span></p>
+                    <p><strong>Type:</strong> <span id="planet-type"></span></p>
+                    <p><strong>System:</strong> <span id="planet-system"></span></p>
+                    <p><strong>Discovery:</strong> <span id="planet-discovery"></span></p>
+                    <p><strong>Habitable Zone:</strong> <span id="planet-habitable"></span></p>
+                </div>
+                <div class="mission-details">
+                    <h3>🛰️ Mission Data</h3>
+                    <p><strong>Mission:</strong> <span id="planet-mission"></span></p>
+                    <p><strong>Status:</strong> <span id="planet-status"></span></p>
+                    <p><strong>ML Confidence:</strong> <span id="planet-confidence"></span></p>
+                </div>
+                <div class="transit-details">
+                    <h3>🔬 Transit Data</h3>
+                    <p><strong>Orbital Period:</strong> <span id="planet-period"></span> days</p>
+                    <p><strong>Transit Depth:</strong> <span id="planet-depth"></span></p>
+                    <p><strong>Transit Duration:</strong> <span id="planet-duration"></span> hrs</p>
+                </div>
+                <div class="navigation-hint">
+                    <p id="navigation-text">Click on a star system to explore it in detail</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <p>Use mouse to orbit, zoom, and explore the exoplanets. Click on a planet to see details.</p>
+            <button id="add-planet-btn" class="add-planet-btn">🪐 Add Random Planet</button>
+            <button id="comparison-mode-btn" class="comparison-btn">📏 Size Comparison</button>
+            <button id="habitable-zone-btn" class="zone-btn">🌱 Toggle Habitable Zone</button>
+            <button id="timeline-btn" class="timeline-btn">📅 Discovery Timeline</button>
+            <button id="reset-view-btn" class="reset-view-btn hidden">🏠 System Overview</button>
+            <button id="education-mode-btn" class="education-btn">🎓 Education Mode</button>
+            <div class="filter-controls">
+                <div class="filter-row">
+                    <label for="planet-filter">Type:</label>
+                    <select id="planet-filter">
+                        <option value="all">All Types</option>
+                        <option value="Rocky">Rocky</option>
+                        <option value="Super-Earth">Super-Earth</option>
+                        <option value="Sub-Neptune">Sub-Neptune</option>
+                        <option value="Hot Jupiter">Hot Jupiter</option>
+                        <option value="Gas Giant">Gas Giant</option>
+                        <option value="habitable">In Habitable Zone</option>
+                    </select>
+                </div>
+                <div class="filter-row">
+                    <label for="mission-filter">Mission:</label>
+                    <select id="mission-filter">
+                        <option value="all">All Missions</option>
+                        <option value="Kepler">🛰️ Kepler (2009-2013)</option>
+                        <option value="K2">🛰️ K2 (2014-2018)</option>
+                        <option value="TESS">🛰️ TESS (2018-present)</option>
+                    </select>
+                </div>
+                <div class="filter-row">
+                    <label for="status-filter">Status:</label>
+                    <select id="status-filter">
+                        <option value="all">All Status</option>
+                        <option value="confirmed">✅ Confirmed</option>
+                        <option value="candidate">🤔 Candidate</option>
+                        <option value="false_positive">❌ False Positive</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div id="comparison-panel" class="comparison-panel hidden">
+            <div class="comparison-content">
+                <button id="close-comparison" class="close-btn">&times;</button>
+                <h2>Planet Size Comparison</h2>
+                <div id="comparison-display"></div>
+                <p>Earth radius = 1.0 (6,371 km)</p>
+            </div>
+        </div>
+        
+        <div id="timeline-panel" class="timeline-panel hidden">
+            <div class="timeline-content">
+                <button id="close-timeline" class="close-btn">&times;</button>
+                <h2>Exoplanet Discovery Timeline</h2>
+                <div id="timeline-display"></div>
+            </div>
+        </div>
+        
+        <div id="education-panel" class="education-panel hidden">
+            <div class="education-content">
+                <button id="close-education" class="close-btn">&times;</button>
+                <h2>🎓 Exoplanet Detection Guide</h2>
+                <div class="education-tabs">
+                    <button class="tab-btn active" data-tab="transit">Transit Method</button>
+                    <button class="tab-btn" data-tab="missions">Space Missions</button>
+                    <button class="tab-btn" data-tab="ml">AI Detection</button>
+                    <button class="tab-btn" data-tab="quiz">Quiz</button>
+                </div>
+                <div id="education-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

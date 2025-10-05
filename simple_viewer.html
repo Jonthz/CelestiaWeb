@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Planet Viewer - K01362.01</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 300px;
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+            color: #00f5ff;
+        }
+        .data-row {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .label {
+            color: #aaa;
+            display: inline-block;
+            width: 120px;
+        }
+        .value {
+            color: #fff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h1>K01362.01</h1>
+        <div class="data-row">
+            <span class="label">Star:</span>
+            <span class="value">Star-K01362.01</span>
+        </div>
+        <div class="data-row">
+            <span class="label">Class:</span>
+            <span class="value">Planet</span>
+        </div>
+        <div class="data-row">
+            <span class="label">Radius:</span>
+            <span class="value">16,455 km</span>
+        </div>
+        <div class="data-row">
+            <span class="label">Orbital Period:</span>
+            <span class="value">20.51 days</span>
+        </div>
+        <div class="data-row">
+            <span class="label">Semi-Major Axis:</span>
+            <span class="value">0.1323 AU</span>
+        </div>
+        <div class="data-row">
+            <span class="label">Inclination:</span>
+            <span class="value">88.82°</span>
+        </div>
+    </div>
+
+    <!-- Load THREE.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // Scene setup
+        let scene, camera, renderer, controls;
+        let planet, star;
+
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+
+            // Create camera
+            camera = new THREE.PerspectiveCamera(
+                75,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 20, 50);
+
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000011);
+            document.body.appendChild(renderer.domElement);
+
+            // Add starfield background
+            createStarfield();
+
+            // Create central star
+            createStar();
+
+            // Create planet K01362.01
+            createPlanet();
+
+            // Create orbital path
+            createOrbit();
+
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+
+            const pointLight = new THREE.PointLight(0xffffff, 1.5, 0);
+            pointLight.position.set(0, 0, 0);
+            scene.add(pointLight);
+
+            // Camera controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Start animation
+            animate();
+        }
+
+        function createStarfield() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starVertices = [];
+
+            for (let i = 0; i < 5000; i++) {
+                const x = (Math.random() - 0.5) * 1000;
+                const y = (Math.random() - 0.5) * 1000;
+                const z = (Math.random() - 0.5) * 1000;
+                starVertices.push(x, y, z);
+            }
+
+            starGeometry.setAttribute('position',
+                new THREE.Float32BufferAttribute(starVertices, 3));
+
+            const starMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 2
+            });
+
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+        }
+
+        function createStar() {
+            const starGeometry = new THREE.SphereGeometry(5, 32, 32);
+            const starMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffff00,
+                emissive: 0xffff00,
+                emissiveIntensity: 0.8
+            });
+
+            star = new THREE.Mesh(starGeometry, starMaterial);
+            star.position.set(0, 0, 0);
+            scene.add(star);
+
+            // Add glow effect
+            const glowGeometry = new THREE.SphereGeometry(6.5, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffaa00,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.BackSide
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            star.add(glow);
+        }
+
+        function createPlanet() {
+            // Planet radius in scene units (scaled down from 16455 km)
+            const planetRadius = 2.5;
+
+            const planetGeometry = new THREE.SphereGeometry(planetRadius, 32, 32);
+
+            // Create a simple procedural texture
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const context = canvas.getContext('2d');
+
+            // Base color (gas giant - similar to Kepler-7b)
+            const gradient = context.createLinearGradient(0, 0, 0, 256);
+            gradient.addColorStop(0, '#e8d5b7');
+            gradient.addColorStop(0.5, '#d4a574');
+            gradient.addColorStop(1, '#c9935a');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, 256, 256);
+
+            // Add some band patterns
+            context.fillStyle = 'rgba(200, 150, 100, 0.3)';
+            for (let i = 0; i < 256; i += 20) {
+                context.fillRect(0, i, 256, 10);
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const planetMaterial = new THREE.MeshLambertMaterial({ map: texture });
+
+            planet = new THREE.Mesh(planetGeometry, planetMaterial);
+
+            // Initial position (Semi-Major Axis = 0.1323 AU, scaled to scene units)
+            // 1 AU ≈ 30 units in our scene
+            const orbitRadius = 0.1323 * 30; // ≈ 4 units
+            planet.position.set(orbitRadius, 0, 0);
+
+            scene.add(planet);
+
+            // Add atmosphere
+            const atmosphereGeometry = new THREE.SphereGeometry(planetRadius * 1.15, 32, 32);
+            const atmosphereMaterial = new THREE.MeshLambertMaterial({
+                color: 0xffa500,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.BackSide
+            });
+            const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+            planet.add(atmosphere);
+        }
+
+        function createOrbit() {
+            const orbitRadius = 0.1323 * 30;
+            const orbitGeometry = new THREE.RingGeometry(
+                orbitRadius - 0.1,
+                orbitRadius + 0.1,
+                128
+            );
+            const orbitMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00ff88,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.4
+            });
+
+            const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
+            orbit.rotation.x = Math.PI / 2;
+            scene.add(orbit);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate planet on its axis
+            planet.rotation.y += 0.005;
+
+            // Orbital motion
+            // Period = 20.513602 days, we'll speed it up for visualization
+            const time = Date.now() * 0.0001;
+            const orbitRadius = 0.1323 * 30;
+            planet.position.x = Math.cos(time) * orbitRadius;
+            planet.position.z = Math.sin(time) * orbitRadius;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
