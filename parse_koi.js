@@ -59,6 +59,7 @@ function parseEntry(entry) {
         status: "candidate",
         confidence: 0.5,
         distance: "Distance unknown",
+        temperature: null, // Equilibrium temperature in Kelvin
         inHabitableZone: false
     };
     
@@ -132,6 +133,13 @@ function parseEntry(entry) {
                 }
             }
         }
+
+        if (line.includes('Temperature')) {
+            const tempMatch = line.match(/Temperature\s+([\d.]+)/);
+            if (tempMatch) {
+                planet.temperature = parseFloat(tempMatch[1]);
+            }
+        }
     }
 
     // Determine planet type based on radius
@@ -147,6 +155,38 @@ function parseEntry(entry) {
     if (!planet.distance) {
         planet.distance = "Distance unknown";
     }
+
+    // Calculate ESI and Habitability Index
+    const earthRadius = 6371; // km
+    const radiusInEarthRadii = planet.radius / earthRadius;
+
+    // Use temperature if available from .ssc file, otherwise calculate a test value
+    let temperature;
+    if (planet.temperature !== null && planet.temperature !== undefined) {
+        temperature = planet.temperature;
+    } else {
+        // Calculate test temperature based on orbital distance (semi-major axis)
+        // Using simplified Stefan-Boltzmann approximation: T ∝ 1/√distance
+        // Earth: 1 AU → 288 K
+        const semiMajorAxis = planet.ellipticalOrbit.semiMajorAxis;
+        temperature = 288 * Math.pow(semiMajorAxis, -0.5);
+
+        // Store the calculated test temperature
+        planet.temperature = Math.round(temperature * 100) / 100; // Round to 2 decimals
+    }
+
+    // Calculate Earth Similarity Index (ESI)
+    planet.esi = earthSimilarityIndex(
+        radiusInEarthRadii,
+        temperature,
+        planet.ellipticalOrbit.period
+    );
+
+    // Calculate Habitability Index (HI)
+    planet.habitabilityIndex = habitabilityIndex(
+        radiusInEarthRadii,
+        temperature
+    );
 
     return planet;
 }
@@ -190,6 +230,61 @@ function estimateMass(radius, type) {
 function isInHabitableZone(semiMajorAxis) {
     // Rough habitable zone for Sun-like stars: 0.95 - 1.37 AU
     return semiMajorAxis >= 0.5 && semiMajorAxis <= 2.0;
+}
+
+/**
+ * Calculate the Earth Similarity Index (ESI) for an exoplanet
+ * @param {number} Rp - Planet radius in Earth radii
+ * @param {number} Teq - Equilibrium temperature in Kelvin
+ * @param {number} Porb - Orbital period in days
+ * @returns {number} ESI: 0 (very different) to 1 (identical to Earth)
+ */
+function earthSimilarityIndex(Rp, Teq, Porb) {
+    // Earth reference values
+    const R_earth = 1.0;
+    const T_earth = 288.0;
+    const P_earth = 365.25;
+
+    // Helper similarity function
+    function S(x, x0, w) {
+        return Math.pow(1 - Math.abs((x - x0) / (x + x0)), w);
+    }
+
+    // Weights (rebalanced since mass was removed)
+    const w_R = 0.57;
+    const w_T = 5.58;
+    const w_P = 0.70;
+
+    const esi = Math.pow(
+        S(Rp, R_earth, w_R) *
+        S(Teq, T_earth, w_T) *
+        S(Porb, P_earth, w_P),
+        1 / 3
+    );
+
+    return esi;
+}
+
+/**
+ * Estimate a simple habitability index based on radius and temperature
+ * @param {number} Rp - Planet radius in Earth radii
+ * @param {number} Teq - Equilibrium temperature in Kelvin
+ * @returns {number} HI: 0 (uninhabitable) to 1 (Earth-like)
+ */
+function habitabilityIndex(Rp, Teq) {
+    // Ideal values and tolerances
+    const R_opt = 1.0;
+    const R_tol = 0.5;     // Earth radius ±0.5
+    const T_opt = 288.0;
+    const T_tol = 60.0;    // Earth temperature ±60 K
+
+    // Normalized similarity scores
+    const R_score = Math.max(0, 1 - Math.abs(Rp - R_opt) / R_tol);
+    const T_score = Math.max(0, 1 - Math.abs(Teq - T_opt) / T_tol);
+
+    // Equal weighting
+    const HI = (R_score + T_score) / 2;
+    return HI;
 }
 
 // Main execution

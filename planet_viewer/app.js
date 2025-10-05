@@ -748,13 +748,52 @@ function updatePlanetInfo() {
         inclinationElement.textContent = `${currentPlanet.ellipticalOrbit.inclination.toFixed(2)}°`;
     }
 
+    // Show temperature
+    const temperatureElement = document.getElementById('planet-temperature');
+    if (temperatureElement) {
+        temperatureElement.textContent = currentPlanet.temperature !== null && currentPlanet.temperature !== undefined
+            ? `${currentPlanet.temperature.toFixed(2)} K`
+            : 'N/A';
+    }
+
+    // Show ESI (Earth Similarity Index)
+    const esiElement = document.getElementById('planet-esi');
+    if (esiElement) {
+        esiElement.textContent = currentPlanet.esi !== undefined
+            ? currentPlanet.esi.toFixed(3)
+            : 'N/A';
+    }
+
+    // Show Habitability Index
+    const habitabilityElement = document.getElementById('planet-habitability');
+    if (habitabilityElement) {
+        const hiValue = currentPlanet.habitabilityIndex !== undefined
+            ? currentPlanet.habitabilityIndex.toFixed(3)
+            : 'N/A';
+        habitabilityElement.textContent = hiValue;
+
+        // Add color coding based on habitability
+        if (currentPlanet.habitabilityIndex !== undefined) {
+            const hi = currentPlanet.habitabilityIndex;
+            if (hi > 0.7) {
+                habitabilityElement.className = 'value habitable-yes';
+            } else if (hi > 0.4) {
+                habitabilityElement.className = 'value habitable-maybe';
+            } else {
+                habitabilityElement.className = 'value habitable-no';
+            }
+        }
+    }
+
     // Apply status classes
     const statusElement = document.getElementById('planet-status');
-    const habitableElement = document.getElementById('planet-habitable');
+    const habitableZoneElement = document.getElementById('planet-habitable');
     const missionElement = document.getElementById('planet-mission');
 
     statusElement.className = `value status-${currentPlanet.status}`;
-    habitableElement.className = `value habitable-${currentPlanet.inHabitableZone ? 'yes' : 'no'}`;
+    if (habitableZoneElement) {
+        habitableZoneElement.className = `value habitable-${currentPlanet.inHabitableZone ? 'yes' : 'no'}`;
+    }
     missionElement.className = `value mission-${currentPlanet.mission?.toLowerCase()}`;
 }
 

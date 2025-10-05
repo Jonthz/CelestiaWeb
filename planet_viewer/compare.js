@@ -68,6 +68,9 @@ async function init() {
     setTimeout(() => {
         changePlanetCategory(leftViewer, 'earth');
         changePlanetCategory(rightViewer, 'jupiter');
+
+        // Restore habitability panel states
+        restoreHabPanelStates();
     }, 100);
 
     hideLoadingScreen();
@@ -656,24 +659,172 @@ function updatePlanetInfo(viewer) {
     if (!viewer.currentPlanet) return;
 
     const side = viewer.side;
-    document.getElementById(`${side}-planet-name`).textContent = viewer.currentPlanet.name;
-    document.getElementById(`${side}-type`).textContent = viewer.currentPlanet.type || 'Unknown';
-    document.getElementById(`${side}-system`).textContent = viewer.currentPlanet.system || 'Unknown';
+
+    // Safe element update helper
+    const safeUpdate = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    };
+
+    safeUpdate(`${side}-planet-name`, viewer.currentPlanet.name);
+    safeUpdate(`${side}-type`, viewer.currentPlanet.type || 'Unknown');
+    safeUpdate(`${side}-system`, viewer.currentPlanet.system || 'Unknown');
 
     const distance = viewer.currentPlanet.distance ||
         `${(viewer.currentPlanet.ellipticalOrbit.semiMajorAxis * 149.6).toFixed(2)} million km`;
-    document.getElementById(`${side}-distance`).textContent = distance;
+    safeUpdate(`${side}-distance`, distance);
 
-    document.getElementById(`${side}-mission`).textContent = viewer.currentPlanet.mission || 'Unknown';
-    document.getElementById(`${side}-status`).textContent = viewer.currentPlanet.status || 'Unknown';
-    document.getElementById(`${side}-confidence`).textContent = viewer.currentPlanet.confidence ?
+    safeUpdate(`${side}-mission`, viewer.currentPlanet.mission || 'Unknown');
+    safeUpdate(`${side}-status`, viewer.currentPlanet.status || 'Unknown');
+
+    const confidenceText = viewer.currentPlanet.confidence ?
         (viewer.currentPlanet.confidence * 100).toFixed(1) + '%' : 'N/A';
-    document.getElementById(`${side}-period`).textContent =
-        viewer.currentPlanet.ellipticalOrbit.period.toFixed(3) + ' days';
+    safeUpdate(`${side}-confidence`, confidenceText);
+
+    const periodText = viewer.currentPlanet.ellipticalOrbit.period.toFixed(3) + ' days';
+    safeUpdate(`${side}-period`, periodText);
 
     const radiusKm = viewer.currentPlanet.radius.toLocaleString();
-    document.getElementById(`${side}-radius`).textContent = `${radiusKm} km`;
-    document.getElementById(`${side}-id`).textContent = viewer.currentPlanet.id;
+    safeUpdate(`${side}-radius`, `${radiusKm} km`);
+    safeUpdate(`${side}-id`, viewer.currentPlanet.id);
+
+    // Update habitability metrics panel
+    updateHabitabilityPanel(viewer);
+}
+
+function updateHabitabilityPanel(viewer) {
+    const side = viewer.side;
+    const planet = viewer.currentPlanet;
+
+    // Update planet name in hab panel
+    const habNameElement = document.getElementById(`${side}-hab-name`);
+    if (habNameElement) {
+        habNameElement.textContent = planet.name || '-';
+    }
+
+    // Calculate mock values if not present
+    let esiValue = planet.esi;
+    let hiValue = planet.habitabilityIndex;
+    let tempValue = planet.temperature;
+
+    // MOCK DATA: Calculate temporary values based on planet properties
+    if (esiValue === undefined || esiValue === null) {
+        esiValue = calculateMockESI(planet);
+    }
+    if (hiValue === undefined || hiValue === null) {
+        hiValue = calculateMockHI(planet);
+    }
+    if (tempValue === undefined || tempValue === null) {
+        tempValue = calculateMockTemperature(planet);
+    }
+
+    // Update ESI
+    const esiValueElement = document.getElementById(`${side}-esi-value`);
+    const esiBarElement = document.getElementById(`${side}-esi-bar`);
+
+    if (esiValue !== null) {
+        esiValueElement.textContent = (esiValue * 100).toFixed(0) + '%';
+        updateProgressBar(esiBarElement, esiValue);
+    } else {
+        esiValueElement.textContent = 'N/A';
+        updateProgressBar(esiBarElement, 0);
+    }
+
+    // Update HI (Habitability Index)
+    const hiValueElement = document.getElementById(`${side}-hi-value`);
+    const hiBarElement = document.getElementById(`${side}-hi-bar`);
+
+    if (hiValue !== null) {
+        hiValueElement.textContent = (hiValue * 100).toFixed(0) + '%';
+        updateProgressBar(hiBarElement, hiValue);
+    } else {
+        hiValueElement.textContent = 'N/A';
+        updateProgressBar(hiBarElement, 0);
+    }
+
+    // Update Temperature
+    const tempValueElement = document.getElementById(`${side}-temp-value`);
+
+    if (tempValue !== null) {
+        tempValueElement.textContent = `${Math.round(tempValue)} K`;
+    } else {
+        tempValueElement.textContent = 'N/A';
+    }
+}
+
+// MOCK DATA FUNCTIONS - Remove these once real data is available
+function calculateMockTemperature(planet) {
+    // Earth reference values
+    if (planet.name === 'Earth') return 288;
+    if (planet.name === 'Jupiter') return 165;
+
+    // Calculate based on orbital distance (simplified Stefan-Boltzmann)
+    const semiMajorAxis = planet.ellipticalOrbit?.semiMajorAxis || 1.0;
+    const temp = 288 * Math.pow(semiMajorAxis, -0.5);
+    return Math.round(temp);
+}
+
+function calculateMockESI(planet) {
+    // Earth reference
+    if (planet.name === 'Earth') return 1.0;
+    if (planet.name === 'Jupiter') return 0.15;
+
+    // Calculate based on radius and orbital distance
+    const earthRadius = 6371;
+    const radiusRatio = planet.radius / earthRadius;
+    const semiMajorAxis = planet.ellipticalOrbit?.semiMajorAxis || 1.0;
+    const period = planet.ellipticalOrbit?.period || 365;
+
+    // Simplified ESI calculation
+    const radiusScore = 1 - Math.abs((radiusRatio - 1) / (radiusRatio + 1));
+    const distanceScore = 1 - Math.abs((semiMajorAxis - 1) / (semiMajorAxis + 1));
+    const periodScore = 1 - Math.abs((period - 365.25) / (period + 365.25));
+
+    const esi = Math.pow(radiusScore * distanceScore * periodScore, 1/3);
+    return Math.max(0, Math.min(1, esi));
+}
+
+function calculateMockHI(planet) {
+    // Earth reference
+    if (planet.name === 'Earth') return 1.0;
+    if (planet.name === 'Jupiter') return 0.05;
+
+    // Calculate based on radius and temperature
+    const earthRadius = 6371;
+    const radiusRatio = planet.radius / earthRadius;
+    const temp = calculateMockTemperature(planet);
+
+    // Radius score (optimal: 0.5 - 1.5 Earth radii)
+    const radiusScore = Math.max(0, 1 - Math.abs(radiusRatio - 1.0) / 0.5);
+
+    // Temperature score (optimal: 228 - 348 K, Earth = 288 K)
+    const tempScore = Math.max(0, 1 - Math.abs(temp - 288) / 60);
+
+    // Equal weighting
+    const hi = (radiusScore + tempScore) / 2;
+    return Math.max(0, Math.min(1, hi));
+}
+
+function updateProgressBar(barElement, value) {
+    if (!barElement) return;
+
+    // Reset bar first
+    barElement.style.width = '0%';
+    barElement.className = 'hab-bar';
+
+    // Determine color class based on value (0-1 scale)
+    if (value > 0.7) {
+        barElement.classList.add('high');
+    } else if (value > 0.4) {
+        barElement.classList.add('medium');
+    } else {
+        barElement.classList.add('low');
+    }
+
+    // Animate bar width after a short delay
+    setTimeout(() => {
+        barElement.style.width = (value * 100) + '%';
+    }, 50);
 }
 
 function updateNavigation(viewer) {
@@ -756,6 +907,40 @@ function setupEventListeners() {
 
     // Cleanup on unload
     window.addEventListener('beforeunload', cleanup);
+
+    // Habitability panel toggle buttons
+    document.getElementById('left-hab-toggle').addEventListener('click', () => toggleHabPanel('left'));
+    document.getElementById('right-hab-toggle').addEventListener('click', () => toggleHabPanel('right'));
+}
+
+function toggleHabPanel(side) {
+    const panel = document.getElementById(`${side}-hab-panel`);
+    if (panel) {
+        panel.classList.toggle('hidden');
+
+        // Save state to localStorage
+        const isHidden = panel.classList.contains('hidden');
+        localStorage.setItem(`${side}-hab-panel-hidden`, isHidden);
+
+        // Update button text
+        const button = document.getElementById(`${side}-hab-toggle`);
+        if (button) {
+            button.textContent = isHidden ? '+' : '×';
+        }
+    }
+}
+
+// Restore hab panel state from localStorage on load
+function restoreHabPanelStates() {
+    ['left', 'right'].forEach(side => {
+        const isHidden = localStorage.getItem(`${side}-hab-panel-hidden`) === 'true';
+        if (isHidden) {
+            const panel = document.getElementById(`${side}-hab-panel`);
+            const button = document.getElementById(`${side}-hab-toggle`);
+            if (panel) panel.classList.add('hidden');
+            if (button) button.textContent = '+';
+        }
+    });
 }
 
 function toggleInfo(viewer) {

@@ -313,6 +313,186 @@
             background: #00d4ff;
             border-radius: 3px;
         }
+
+        /* Habitability Metrics Panel */
+        .hab-metrics-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 190px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 212, 255, 0.5);
+            border-radius: 12px;
+            padding: 12px 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .hab-metrics-panel.hab-panel-left {
+            right: auto;
+            left: 10px;
+        }
+
+        .hab-metrics-panel:hover {
+            border-color: rgba(0, 212, 255, 0.8);
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.2);
+        }
+
+        .hab-metrics-panel.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-10px);
+        }
+
+        .hab-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .hab-planet-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #00d4ff;
+            text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+        }
+
+        .hab-toggle-btn {
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.5);
+            color: #00d4ff;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .hab-toggle-btn:hover {
+            background: rgba(0, 212, 255, 0.4);
+            transform: rotate(90deg);
+        }
+
+        .hab-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .hab-metric {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .hab-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .hab-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+            text-align: right;
+            min-height: 16px;
+        }
+
+        .hab-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hab-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease-out;
+            width: 0%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Color coding for bars */
+        .hab-bar.high {
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            box-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
+        }
+
+        .hab-bar.medium {
+            background: linear-gradient(90deg, #f39c12, #e67e22);
+            box-shadow: 0 0 8px rgba(243, 156, 18, 0.5);
+        }
+
+        .hab-bar.low {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+            box-shadow: 0 0 8px rgba(231, 76, 60, 0.5);
+        }
+
+        /* Shimmer animation for bars */
+        .hab-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .hab-metrics-panel {
+                width: 160px;
+                padding: 10px 12px;
+            }
+
+            .hab-planet-name {
+                font-size: 11px;
+                max-width: 110px;
+            }
+
+            .hab-label {
+                font-size: 10px;
+            }
+
+            .hab-value {
+                font-size: 11px;
+            }
+        }
     </style>
 </head>
 
@@ -342,6 +522,34 @@
             <!-- 3D Scene -->
             <div class="scene-wrapper">
                 <div id="left-scene" class="viewer-scene"></div>
+
+                <!-- Habitability Metrics Panel -->
+                <div id="left-hab-panel" class="hab-metrics-panel">
+                    <div class="hab-header">
+                        <span class="hab-planet-name" id="left-hab-name">-</span>
+                        <button class="hab-toggle-btn" id="left-hab-toggle">×</button>
+                    </div>
+                    <div class="hab-content">
+                        <div class="hab-metric">
+                            <div class="hab-label">🌍 ESI</div>
+                            <div class="hab-value" id="left-esi-value">-</div>
+                            <div class="hab-bar-container">
+                                <div class="hab-bar" id="left-esi-bar"></div>
+                            </div>
+                        </div>
+                        <div class="hab-metric">
+                            <div class="hab-label">🌱 HI</div>
+                            <div class="hab-value" id="left-hi-value">-</div>
+                            <div class="hab-bar-container">
+                                <div class="hab-bar" id="left-hi-bar"></div>
+                            </div>
+                        </div>
+                        <div class="hab-metric">
+                            <div class="hab-label">🌡️ Temp</div>
+                            <div class="hab-value" id="left-temp-value">-</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Planet Selector -->
@@ -414,6 +622,34 @@
             <!-- 3D Scene -->
             <div class="scene-wrapper">
                 <div id="right-scene" class="viewer-scene"></div>
+
+                <!-- Habitability Metrics Panel -->
+                <div id="right-hab-panel" class="hab-metrics-panel hab-panel-left">
+                    <div class="hab-header">
+                        <button class="hab-toggle-btn" id="right-hab-toggle">×</button>
+                        <span class="hab-planet-name" id="right-hab-name">-</span>
+                    </div>
+                    <div class="hab-content">
+                        <div class="hab-metric">
+                            <div class="hab-label">🌍 ESI</div>
+                            <div class="hab-value" id="right-esi-value">-</div>
+                            <div class="hab-bar-container">
+                                <div class="hab-bar" id="right-esi-bar"></div>
+                            </div>
+                        </div>
+                        <div class="hab-metric">
+                            <div class="hab-label">🌱 HI</div>
+                            <div class="hab-value" id="right-hi-value">-</div>
+                            <div class="hab-bar-container">
+                                <div class="hab-bar" id="right-hi-bar"></div>
+                            </div>
+                        </div>
+                        <div class="hab-metric">
+                            <div class="hab-label">🌡️ Temp</div>
+                            <div class="hab-value" id="right-temp-value">-</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Planet Selector -->
