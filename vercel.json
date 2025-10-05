@@ -1,30 +1,14 @@
 {
   "version": 2,
   "public": true,
-  "routes": [
+  "rewrites": [
     {
-      "src": "/planet_viewer",
-      "dest": "/planet_viewer/index.html"
+      "source": "/planet_viewer",
+      "destination": "/planet_viewer/index.html"
     },
     {
-      "src": "/planet_viewer/(.*)",
-      "dest": "/planet_viewer/$1"
-    },
-    {
-      "src": "/solar_view",
-      "dest": "/solar_view/index.html"
-    },
-    {
-      "src": "/solar_view/(.*)",
-      "dest": "/solar_view/$1"
-    },
-    {
-      "src": "/(.*\\.(css|js|json|ssc|html))",
-      "dest": "/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/index.html"
+      "source": "/solar_view",
+      "destination": "/solar_view/index.html"
     }
   ],
   "headers": [
@@ -38,15 +22,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600"
-        }
-      ]
-    },
-    {
-      "source": "/(.*\\.(js|css|json))",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/javascript; charset=utf-8"
         }
       ]
     }
