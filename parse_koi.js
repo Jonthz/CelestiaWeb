@@ -105,20 +105,40 @@ function parseEntry(entry) {
                 planet.ellipticalOrbit.inclination = parseFloat(incMatch[1]);
             }
         }
+
+        if (line.includes('Distance')) {
+            const distMatch = line.match(/Distance\s+"([^"]+)"/);
+            if (distMatch) {
+                planet.distance = distMatch[1];
+            }
+        }
+
+        if (line.includes('Confidence')) {
+            const confMatch = line.match(/Confidence\s+"([^"]+)"/);
+            if (confMatch) {
+                // Extract percentage and convert to decimal (e.g., "55%" -> 0.55)
+                const percentMatch = confMatch[1].match(/([\d.]+)%/);
+                if (percentMatch) {
+                    planet.confidence = parseFloat(percentMatch[1]) / 100;
+                }
+            }
+        }
     }
-    
+
     // Determine planet type based on radius
     planet.type = determinePlanetType(planet.radius);
-    
+
     // Estimate mass based on radius and type
     //planet.mass = estimateMass(planet.radius, planet.type);
-    
+
     // Check if in habitable zone (rough estimate based on semi-major axis)
     planet.inHabitableZone = isInHabitableZone(planet.ellipticalOrbit.semiMajorAxis);
-    
-    // Set confidence based on mission
-    planet.confidence = Math.random() * 0.4 + 0.6; // Random between 0.6-1.0
-    
+
+    // If confidence wasn't parsed from file, use default
+    if (!planet.distance) {
+        planet.distance = "Distance unknown";
+    }
+
     return planet;
 }
 
