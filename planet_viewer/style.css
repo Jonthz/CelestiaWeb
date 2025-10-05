@@ -52,8 +52,13 @@ body {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 #loading-text {
@@ -295,16 +300,37 @@ header p {
 }
 
 /* Status indicators */
-.status-confirmed { color: #4ade80; }
-.status-candidate { color: #fbbf24; }
-.status-false_positive { color: #f87171; }
+.status-confirmed {
+    color: #4ade80;
+}
 
-.mission-kepler { color: #60a5fa; }
-.mission-k2 { color: #a78bfa; }
-.mission-tess { color: #34d399; }
+.status-candidate {
+    color: #fbbf24;
+}
 
-.habitable-yes { color: #4ade80; }
-.habitable-no { color: #f87171; }
+.status-false_positive {
+    color: #f87171;
+}
+
+.mission-kepler {
+    color: #60a5fa;
+}
+
+.mission-k2 {
+    color: #a78bfa;
+}
+
+.mission-tess {
+    color: #34d399;
+}
+
+.habitable-yes {
+    color: #4ade80;
+}
+
+.habitable-no {
+    color: #f87171;
+}
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
@@ -313,29 +339,29 @@ header p {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     h1 {
         font-size: 1.5rem;
     }
-    
+
     .navigation-controls {
         flex-direction: column;
         gap: 1rem;
         padding: 1rem;
         bottom: 80px;
     }
-    
+
     .nav-btn {
         min-width: auto;
         width: 100%;
         justify-content: center;
     }
-    
+
     .planet-info-compact {
         min-width: auto;
         width: 100%;
     }
-    
+
     .info-panel {
         position: relative;
         top: auto;
@@ -343,13 +369,13 @@ header p {
         max-width: none;
         margin: 1rem;
     }
-    
+
     .controls {
         padding: 1rem;
         flex-direction: column;
         text-align: center;
     }
-    
+
     .control-buttons {
         justify-content: center;
     }
@@ -361,8 +387,15 @@ header p {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .slide-left {
@@ -370,8 +403,15 @@ header p {
 }
 
 @keyframes slideLeft {
-    from { transform: translateX(50px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from {
+        transform: translateX(50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 .slide-right {
@@ -379,6 +419,109 @@ header p {
 }
 
 @keyframes slideRight {
-    from { transform: translateX(-50px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from {
+        transform: translateX(-50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+CSS
+
+/* --- Galactic Theme Variables --- */
+:root {
+    --galactic-purple: #bb86fc;
+    /* A bright, vibrant purple */
+    --galactic-dark: #121212;
+    /* Deep, almost black background */
+    --galactic-light-dark: #1f1f1f;
+    /* A slightly lighter dark for contrast */
+    --galactic-text: #e0e0e0;
+    /* Light gray/white for text */
+}
+
+/* --- Container Style --- */
+.planet-select-container {
+    /* Center the element and give it some breathing room */
+    display: inline-block;
+    padding: 10px;
+    border: 2px solid var(--galactic-purple);
+    /* Purple border */
+    border-radius: 8px;
+    /* Slightly rounded corners */
+    background-color: black;
+    /* Deep space background */
+    box-shadow: 0 0 15px var(--galactic-purple);
+    /* A subtle purple glow effect */
+}
+
+/* --- Select Dropdown Style --- */
+.planet-select {
+    /* General appearance */
+    appearance: none;
+    /* Remove default browser styling */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    /* Sizing and spacing */
+    width: 200px;
+    /* Or whatever size you need */
+    padding: 10px 30px 10px 10px;
+    /* Extra padding on the right for the custom arrow */
+
+    /* Colors and font */
+    background-color: var(--galactic-light-dark);
+    /* Darker gray background for contrast */
+    color: var(--galactic-text);
+    /* Light text */
+    border: 1px solid var(--galactic-purple);
+    /* Purple inner border */
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    /* Smooth transitions for hover effects */
+
+    /* Custom Arrow (The default select arrow is usually ugly) */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23bb86fc'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+}
+
+/* --- Hover/Focus Effects (The Glow!) --- */
+.planet-select:hover {
+    border-color: #e0b0ff;
+    /* Lighter purple on hover */
+    box-shadow: 0 0 10px var(--galactic-purple);
+    /* Intense glow on hover */
+}
+
+.planet-select:focus {
+    outline: none;
+    /* Remove default focus outline */
+    border-color: #e0b0ff;
+    box-shadow: 0 0 15px var(--galactic-purple);
+    /* Stronger glow on focus */
+}
+
+/* --- Option Styles (How the options look in the expanded list) --- */
+/* Note: Styling the expanded options dropdown is tricky and inconsistent across browsers. 
+   These styles primarily affect the *selected* option and how the options look when not expanded 
+   (though they might show up in some browsers' expanded list). */
+.planet-select option {
+    background-color: var(--galactic-dark);
+    /* Deep black for the option background */
+    color: var(--galactic-text);
+    padding: 5px;
+}
+
+/* Style for the disabled 'Select a Planet' option */
+.planet-select option[disabled] {
+    color: #555;
+    /* A dimmer color for the placeholder */
 }

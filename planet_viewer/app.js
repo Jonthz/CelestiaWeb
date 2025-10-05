@@ -16,7 +16,7 @@ init();
 async function init() {
     updateLoadingText("Loading planet data...");
     await loadPlanetData();
-
+    populatePlanetSelect()
     updateLoadingText("Setting up 3D environment...");
     setupScene();
     setupCamera();
@@ -83,9 +83,9 @@ async function loadPlanetData() {
                     id: `FALLBACK_${index}`,
                     star: `Star-${planet.system}`,
                     class: "Planet",
-                    radius: planet.type === "Gas Giant" ? 71492 : 
-                           planet.type === "Hot Jupiter" ? 47898 :
-                           planet.type === "Super-Earth" ? 8967 : 6371,
+                    radius: planet.type === "Gas Giant" ? 71492 :
+                        planet.type === "Hot Jupiter" ? 47898 :
+                            planet.type === "Super-Earth" ? 8967 : 6371,
                     texture: `${planet.name}.jpg`,
                     ellipticalOrbit: {
                         period: planet.orbitalPeriod || 365,
@@ -133,10 +133,10 @@ async function loadPlanetData() {
 
 function setupScene() {
     scene = new THREE.Scene();
-    
+
     // Create improved starfield background
     createStarfield();
-    
+
     // Create background star (sun)
     createBackgroundStar();
 }
@@ -147,23 +147,23 @@ function createStarfield() {
     const starsPositions = new Float32Array(starsCount * 3);
     const starsSizes = new Float32Array(starsCount);
     const starsColors = new Float32Array(starsCount * 3);
-    
+
     // Create varied star positions, sizes, and colors
     for (let i = 0; i < starsCount; i++) {
         const i3 = i * 3;
-        
+
         // Position stars in a sphere around the scene
         const radius = 150 + Math.random() * 50;
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos(Math.random() * 2 - 1);
-        
+
         starsPositions[i3] = radius * Math.sin(phi) * Math.cos(theta);
         starsPositions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
         starsPositions[i3 + 2] = radius * Math.cos(phi);
-        
+
         // Vary star sizes (small but visible)
         starsSizes[i] = Math.random() * 2.0 + 2.0; // Visible range: 2.0 to 4.0
-        
+
         // Create varied star colors (blue-white to red)
         const temperature = Math.random();
         if (temperature > 0.8) {
@@ -188,11 +188,11 @@ function createStarfield() {
             starsColors[i3 + 2] = 0.4 + Math.random() * 0.2;
         }
     }
-    
+
     starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3));
     starsGeometry.setAttribute('size', new THREE.BufferAttribute(starsSizes, 1));
     starsGeometry.setAttribute('color', new THREE.BufferAttribute(starsColors, 3));
-    
+
     // Create custom star material with vertex shader for size variation
     const starsMaterial = new THREE.ShaderMaterial({
         uniforms: {
@@ -238,10 +238,10 @@ function createStarfield() {
         depthWrite: false,
         blending: THREE.AdditiveBlending
     });
-    
+
     const starfield = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(starfield);
-    
+
     // Store reference for animation
     scene.userData.starfield = starfield;
 }
@@ -257,7 +257,7 @@ function setupRenderer() {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    
+
     const container = document.getElementById('scene-container');
     container.appendChild(renderer.domElement);
 }
@@ -329,17 +329,17 @@ function generateRealisticTexture(planetData) {
     canvas.width = 256;
     canvas.height = 256;
     const context = canvas.getContext('2d');
-    
+
     // Determine planet type based on radius and create appropriate texture
     const radius = planetData.radius || 1;
     const earthRadius = 6371; // km
     const relativeSize = radius / earthRadius;
-    
+
     let planetType = determinePlanetType(relativeSize);
-    
+
     // Create base gradient
     const gradient = context.createRadialGradient(128, 128, 0, 128, 128, 128);
-    
+
     if (planetType === 'gas_giant') {
         createGasGiantTexture(context, gradient);
     } else if (planetType === 'ice_world') {
@@ -351,15 +351,15 @@ function generateRealisticTexture(planetData) {
     } else {
         createRockyWorldTexture(context, gradient);
     }
-    
+
     // Add atmospheric effects if large enough
     if (relativeSize > 0.5) {
         addAtmosphericGlow(context);
     }
-    
+
     // Add surface details
     addSurfaceDetails(context, planetType);
-    
+
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
     texture.wrapS = THREE.RepeatWrapping;
@@ -371,7 +371,7 @@ function determinePlanetType(relativeSize) {
     if (relativeSize > 4) return 'gas_giant';
     if (relativeSize > 1.5) return 'super_earth';
     if (relativeSize < 0.5) return 'small_rocky';
-    
+
     // Random assignment for variety
     const types = ['rocky_world', 'ice_world', 'desert_world', 'ocean_world'];
     return types[Math.floor(Math.random() * types.length)];
@@ -380,13 +380,13 @@ function determinePlanetType(relativeSize) {
 function createGasGiantTexture(context, gradient) {
     // Gas giant bands
     const colors = ['#ff7f00', '#ffb366', '#ffd9b3', '#fff2e6', '#e6ccb3'];
-    
+
     for (let i = 0; i < 256; i += 20) {
         const color = colors[Math.floor(Math.random() * colors.length)];
         context.fillStyle = color;
         context.fillRect(0, i, 256, 20 + Math.random() * 10);
     }
-    
+
     // Add storm systems
     for (let i = 0; i < 5; i++) {
         context.fillStyle = 'rgba(139, 69, 19, 0.6)';
@@ -405,10 +405,10 @@ function createIceWorldTexture(context, gradient) {
     gradient.addColorStop(0.3, '#cce7ff');
     gradient.addColorStop(0.6, '#99d6ff');
     gradient.addColorStop(1, '#66c2ff');
-    
+
     context.fillStyle = gradient;
     context.fillRect(0, 0, 256, 256);
-    
+
     // Ice formations
     for (let i = 0; i < 20; i++) {
         context.fillStyle = 'rgba(255, 255, 255, 0.7)';
@@ -426,10 +426,10 @@ function createDesertWorldTexture(context, gradient) {
     gradient.addColorStop(0.3, '#deb887');
     gradient.addColorStop(0.6, '#cd853f');
     gradient.addColorStop(1, '#8b4513');
-    
+
     context.fillStyle = gradient;
     context.fillRect(0, 0, 256, 256);
-    
+
     // Sand dunes
     for (let i = 0; i < 15; i++) {
         context.fillStyle = 'rgba(160, 82, 45, 0.4)';
@@ -448,10 +448,10 @@ function createOceanWorldTexture(context, gradient) {
     gradient.addColorStop(0.3, '#5f9ea0');
     gradient.addColorStop(0.6, '#008b8b');
     gradient.addColorStop(1, '#006400');
-    
+
     context.fillStyle = gradient;
     context.fillRect(0, 0, 256, 256);
-    
+
     // Continents
     for (let i = 0; i < 8; i++) {
         context.fillStyle = 'rgba(34, 139, 34, 0.8)';
@@ -469,10 +469,10 @@ function createRockyWorldTexture(context, gradient) {
     gradient.addColorStop(0.3, '#a0522d');
     gradient.addColorStop(0.6, '#696969');
     gradient.addColorStop(1, '#2f4f4f');
-    
+
     context.fillStyle = gradient;
     context.fillRect(0, 0, 256, 256);
-    
+
     // Rock formations
     for (let i = 0; i < 25; i++) {
         context.fillStyle = 'rgba(105, 105, 105, 0.5)';
@@ -490,7 +490,7 @@ function addAtmosphericGlow(context) {
     glowGradient.addColorStop(0, 'rgba(135, 206, 235, 0)');
     glowGradient.addColorStop(0.8, 'rgba(135, 206, 235, 0.1)');
     glowGradient.addColorStop(1, 'rgba(135, 206, 235, 0.3)');
-    
+
     context.fillStyle = glowGradient;
     context.fillRect(0, 0, 256, 256);
 }
@@ -502,30 +502,30 @@ function addSurfaceDetails(context, planetType) {
             const x = Math.random() * 256;
             const y = Math.random() * 256;
             const radius = Math.random() * 8 + 2;
-            
+
             context.fillStyle = 'rgba(0, 0, 0, 0.3)';
             context.beginPath();
             context.arc(x, y, radius, 0, Math.PI * 2);
             context.fill();
-            
+
             context.fillStyle = 'rgba(255, 255, 255, 0.1)';
             context.beginPath();
             context.arc(x - radius * 0.3, y - radius * 0.3, radius * 0.5, 0, Math.PI * 2);
             context.fill();
         }
     }
-    
+
     // Add noise for all planet types
     const imageData = context.getImageData(0, 0, 256, 256);
     const data = imageData.data;
-    
+
     for (let i = 0; i < data.length; i += 4) {
         const noise = (Math.random() - 0.5) * 20;
         data[i] = Math.max(0, Math.min(255, data[i] + noise));
         data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
         data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
     }
-    
+
     context.putImageData(imageData, 0, 0);
 }
 
@@ -705,30 +705,30 @@ function showPlanet(index) {
 
 function updatePlanetInfo() {
     if (!currentPlanet) return;
-    
+
     // Update compact info
     document.getElementById('current-planet-name').textContent = currentPlanet.name;
     document.getElementById('current-planet-system').textContent = `System: ${currentPlanet.system}`;
     document.getElementById('current-planet-type').textContent = `Type: ${currentPlanet.type}`;
-    
+
     // Update detailed info
     document.getElementById('planet-name-detail').textContent = currentPlanet.name;
     //document.getElementById('planet-mass').textContent = currentPlanet.mass;
-    
+
     // Use the distance parameter from the data
     const distance = currentPlanet.distance || 'Distance unknown';
     document.getElementById('planet-distance').textContent = distance;
-    
+
     document.getElementById('planet-system').textContent = currentPlanet.system;
     document.getElementById('planet-discovery').textContent = currentPlanet.discoveryYear;
     document.getElementById('planet-habitable').textContent = currentPlanet.inHabitableZone ? 'Yes' : 'No';
-    
+
     // Mission data
     document.getElementById('planet-mission').textContent = currentPlanet.mission || 'Unknown';
     document.getElementById('planet-status').textContent = currentPlanet.status || 'Unknown';
-    document.getElementById('planet-confidence').textContent = currentPlanet.confidence ? 
+    document.getElementById('planet-confidence').textContent = currentPlanet.confidence ?
         (currentPlanet.confidence * 100).toFixed(1) + '%' : 'N/A';
-    
+
     // Orbital data
     document.getElementById('planet-period').textContent =
         currentPlanet.ellipticalOrbit.period.toFixed(3) + ' days';
@@ -747,12 +747,12 @@ function updatePlanetInfo() {
     if (inclinationElement && currentPlanet.ellipticalOrbit.inclination !== undefined) {
         inclinationElement.textContent = `${currentPlanet.ellipticalOrbit.inclination.toFixed(2)}°`;
     }
-    
+
     // Apply status classes
     const statusElement = document.getElementById('planet-status');
     const habitableElement = document.getElementById('planet-habitable');
     const missionElement = document.getElementById('planet-mission');
-    
+
     statusElement.className = `value status-${currentPlanet.status}`;
     habitableElement.className = `value habitable-${currentPlanet.inHabitableZone ? 'yes' : 'no'}`;
     missionElement.className = `value mission-${currentPlanet.mission?.toLowerCase()}`;
@@ -761,10 +761,10 @@ function updatePlanetInfo() {
 function updateNavigation() {
     document.getElementById('current-planet-index').textContent = currentPlanetIndex + 1;
     document.getElementById('total-planets').textContent = planets.length;
-    
+
     const prevBtn = document.getElementById('prev-planet');
     const nextBtn = document.getElementById('next-planet');
-    
+
     prevBtn.disabled = currentPlanetIndex === 0;
     nextBtn.disabled = currentPlanetIndex === planets.length - 1;
 }
@@ -838,7 +838,7 @@ function setupEventListeners() {
     // Navigation buttons
     document.getElementById('prev-planet').addEventListener('click', previousPlanet);
     document.getElementById('next-planet').addEventListener('click', nextPlanet);
-    
+
     // Control buttons
     document.getElementById('toggle-info').addEventListener('click', toggleInfo);
     document.getElementById('compare-planets-btn').addEventListener('click', () => {
@@ -850,7 +850,7 @@ function setupEventListeners() {
 
     // Keyboard navigation
     document.addEventListener('keydown', (event) => {
-        switch(event.code) {
+        switch (event.code) {
             case 'ArrowLeft':
                 event.preventDefault();
                 previousPlanet();
@@ -877,7 +877,7 @@ function setupEventListeners() {
                 break;
         }
     });
-    
+
     // Window resize
     window.addEventListener('resize', onWindowResize);
 }
@@ -949,3 +949,23 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+function populatePlanetSelect() {
+    const select = document.getElementById('planet-select');
+    if (!select || !planets) return;
+
+    select.innerHTML = '<option value="" disabled selected>Select a Planet</option>';
+    console.log(planets)
+    planets.forEach((planet, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `${planet.name} (${planet.system})`;
+        select.appendChild(option);
+    });
+
+    select.addEventListener('change', (event) => {
+        const selectedIndex = parseInt(event.target.value);
+        if (!isNaN(selectedIndex)) {
+            showPlanet(selectedIndex);
+        }
+    });
+}

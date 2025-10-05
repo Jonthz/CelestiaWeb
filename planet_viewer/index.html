@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planet Viewer - Celestia Web</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <div id="loading-screen" class="loading-screen">
@@ -15,7 +17,7 @@
                 <p id="loading-text">Initializing KOI candidate data...</p>
             </div>
         </div>
-        
+
         <header>
             <h1>Planet Viewer - Celestia Web</h1>
             <p>Explore individual exoplanets in detail</p>
@@ -27,9 +29,15 @@
                 <span id="current-planet-index">1</span> / <span id="total-planets">0</span>
             </div>
         </header>
-        
+
+        <div id="planet-select-container" class="planet-select-container">
+            <select id="planet-select" class="planet-select">
+                <option value="" disabled selected>Select a Planet</option>
+            </select>
+        </div>
+
         <div id="scene-container"></div>
-        
+
         <div class="navigation-controls">
             <button id="prev-planet" class="nav-btn">
                 <span class="arrow">←</span>
@@ -47,7 +55,7 @@
                 <span class="arrow">→</span>
             </button>
         </div>
-        
+
         <div id="info-panel" class="info-panel">
             <div class="info-content">
                 <div id="planet-details" class="planet-details hidden">
@@ -109,7 +117,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="controls">
             <p>Use mouse to rotate around the planet. Arrow keys or navigation buttons to switch planets.</p>
             <div class="control-buttons">
@@ -127,4 +135,5 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="app.js?v=1.1"></script>
 </body>
+
 </html>
