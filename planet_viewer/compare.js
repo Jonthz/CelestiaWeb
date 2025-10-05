@@ -46,32 +46,32 @@ init();
 async function init() {
     updateLoadingText("Loading planet data...");
     await loadPlanetData();
-    
+
     updateLoadingText("Setting up viewers...");
     setupViewer(leftViewer, 'left-scene');
     setupViewer(rightViewer, 'right-scene');
-    
+
     updateLoadingText("Loading planets...");
-    
+
     // Initialize viewers with default categories
     leftViewer.availablePlanets = getPlanetsForCategory('earth');
     rightViewer.availablePlanets = getPlanetsForCategory('jupiter');
-    
+
     updateLoadingText("Initializing controls...");
     setupEventListeners();
-    
+
     // Set dropdown values after initialization
     document.getElementById('left-category').value = 'earth';
     document.getElementById('right-category').value = 'jupiter';
-    
+
     // Wait a bit for everything to settle, then trigger initial category changes
     setTimeout(() => {
         changePlanetCategory(leftViewer, 'earth');
         changePlanetCategory(rightViewer, 'jupiter');
     }, 100);
-    
+
     hideLoadingScreen();
-    
+
     // Start animation loop
     animate();
 }
@@ -112,7 +112,7 @@ async function loadPlanetData() {
         const exoResponse = await fetch('./koiData.json');
         exoplanets = await exoResponse.json();
         console.log(`✅ Loaded ${exoplanets.length} exoplanets`);
-        
+
         // Set default planets array to exoplanets
         planets = exoplanets;
         updateLoadingText(`Successfully loaded all planetary data!`);
@@ -126,7 +126,7 @@ async function loadPlanetData() {
 }
 
 function getPlanetsForCategory(category) {
-    switch(category) {
+    switch (category) {
         case 'earth':
             return solarSystemPlanets.filter(p => p.name === 'Earth');
         case 'jupiter':
@@ -142,7 +142,7 @@ function changePlanetCategory(viewer, category) {
     const categoryPlanets = getPlanetsForCategory(category);
     viewer.availablePlanets = categoryPlanets;
     viewer.currentPlanetIndex = 0;
-    
+
     // Show search input only for exoplanets
     const searchInput = document.getElementById(`${viewer.side}-search`);
     if (category === 'exoplanets') {
@@ -150,23 +150,23 @@ function changePlanetCategory(viewer, category) {
     } else {
         searchInput.style.display = 'none';
     }
-    
+
     // Show the first planet of the selected category
     if (categoryPlanets.length > 0) {
         showPlanet(viewer, 0);
     }
-    
+
     updateNavigation(viewer);
 }
 
 function setupViewer(viewer, containerId) {
     viewer.containerElement = document.getElementById(containerId);
-    
+
     // Setup scene
     viewer.scene = new THREE.Scene();
     createStarfield(viewer);
     createBackgroundStar(viewer);
-    
+
     // Setup camera
     viewer.camera = new THREE.PerspectiveCamera(
         75,
@@ -175,7 +175,7 @@ function setupViewer(viewer, containerId) {
         1000
     );
     viewer.camera.position.set(0, 0, cameraDistance);
-    
+
     // Setup renderer
     viewer.renderer = new THREE.WebGLRenderer({ antialias: true });
     viewer.renderer.setSize(
@@ -186,7 +186,7 @@ function setupViewer(viewer, containerId) {
     viewer.renderer.shadowMap.enabled = true;
     viewer.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     viewer.containerElement.appendChild(viewer.renderer.domElement);
-    
+
     // Setup controls
     viewer.controls = new THREE.OrbitControls(viewer.camera, viewer.renderer.domElement);
     viewer.controls.enableDamping = true;
@@ -196,7 +196,7 @@ function setupViewer(viewer, containerId) {
     viewer.controls.target.set(0, 0, 0);
     viewer.controls.minDistance = 3;
     viewer.controls.maxDistance = 40;
-    
+
     // Setup lighting (increased brightness)
     const ambientLight = new THREE.AmbientLight(0x606060, 0.6);
     viewer.scene.add(ambientLight);
@@ -219,18 +219,18 @@ function createStarfield(viewer) {
     const starsPositions = new Float32Array(starsCount * 3);
     const starsSizes = new Float32Array(starsCount);
     const starsColors = new Float32Array(starsCount * 3);
-    
+
     for (let i = 0; i < starsCount; i++) {
         const i3 = i * 3;
         const radius = 150 + Math.random() * 50;
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos(Math.random() * 2 - 1);
-        
+
         starsPositions[i3] = radius * Math.sin(phi) * Math.cos(theta);
         starsPositions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
         starsPositions[i3 + 2] = radius * Math.cos(phi);
         starsSizes[i] = Math.random() * 2.0 + 2.0;
-        
+
         const temperature = Math.random();
         if (temperature > 0.8) {
             starsColors[i3] = 0.8 + Math.random() * 0.2;
@@ -250,11 +250,11 @@ function createStarfield(viewer) {
             starsColors[i3 + 2] = 0.4 + Math.random() * 0.2;
         }
     }
-    
+
     starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3));
     starsGeometry.setAttribute('size', new THREE.BufferAttribute(starsSizes, 1));
     starsGeometry.setAttribute('color', new THREE.BufferAttribute(starsColors, 3));
-    
+
     const starsMaterial = new THREE.ShaderMaterial({
         uniforms: { time: { value: 0 } },
         vertexShader: `
@@ -288,7 +288,7 @@ function createStarfield(viewer) {
         depthWrite: false,
         blending: THREE.AdditiveBlending
     });
-    
+
     const starfield = new THREE.Points(starsGeometry, starsMaterial);
     viewer.scene.add(starfield);
     viewer.scene.userData.starfield = starfield;
@@ -330,13 +330,13 @@ function generateRealisticTexture(planetData) {
     canvas.width = 256;
     canvas.height = 256;
     const context = canvas.getContext('2d');
-    
+
     const radius = planetData.radius || 1;
     const earthRadius = 6371;
     const relativeSize = radius / earthRadius;
     let planetType = determinePlanetType(relativeSize);
     const gradient = context.createRadialGradient(128, 128, 0, 128, 128, 128);
-    
+
     if (planetType === 'gas_giant') {
         createGasGiantTexture(context, gradient);
     } else if (planetType === 'ice_world') {
@@ -348,13 +348,13 @@ function generateRealisticTexture(planetData) {
     } else {
         createRockyWorldTexture(context, gradient);
     }
-    
+
     if (relativeSize > 0.5) {
         addAtmosphericGlow(context);
     }
-    
+
     addSurfaceDetails(context, planetType);
-    
+
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
     texture.wrapS = THREE.RepeatWrapping;
@@ -583,21 +583,21 @@ function createRotationAxis(planetData, planetSize) {
     const inclinationDegrees = planetData.ellipticalOrbit?.inclination || 0;
     const inclinationRadians = (90 - inclinationDegrees) * (Math.PI / 180);
     const axisLength = planetSize * 1.8;
-    
+
     const axisGeometry = new THREE.BufferGeometry();
     const axisVertices = new Float32Array([
         0, -axisLength, 0,
         0, axisLength, 0
     ]);
     axisGeometry.setAttribute('position', new THREE.BufferAttribute(axisVertices, 3));
-    
+
     const axisMaterial = new THREE.LineBasicMaterial({
         color: 0x00ffff,
         linewidth: 3,
         transparent: true,
         opacity: 0.8
     });
-    
+
     const axisLine = new THREE.Line(axisGeometry, axisMaterial);
     axisLine.rotation.x = inclinationRadians;
     
@@ -605,7 +605,7 @@ function createRotationAxis(planetData, planetSize) {
     axisGroup.add(axisLine);
     axisGroup.rotation.x = inclinationRadians;
     axisGroup.userData.inclinationDegrees = inclinationDegrees;
-    
+
     return axisGroup;
 }
 
@@ -680,10 +680,10 @@ function updateNavigation(viewer) {
     const side = viewer.side;
     document.getElementById(`${side}-counter`).textContent = viewer.currentPlanetIndex + 1;
     document.getElementById(`${side}-total`).textContent = viewer.availablePlanets.length;
-    
+
     const prevBtn = document.getElementById(`${side}-prev`);
     const nextBtn = document.getElementById(`${side}-next`);
-    
+
     prevBtn.disabled = viewer.currentPlanetIndex === 0;
     nextBtn.disabled = viewer.currentPlanetIndex === viewer.availablePlanets.length - 1;
 }
@@ -703,7 +703,7 @@ function previousPlanet(viewer) {
 function toggleAutoRotate(viewer) {
     viewer.autoRotate = !viewer.autoRotate;
     const button = document.getElementById(`${viewer.side}-auto-rotate`);
-    
+
     if (viewer.autoRotate) {
         button.classList.add('active');
     } else {
@@ -724,36 +724,36 @@ function setupEventListeners() {
     document.getElementById('left-auto-rotate').addEventListener('click', () => toggleAutoRotate(leftViewer));
     document.getElementById('left-reset').addEventListener('click', () => resetCamera(leftViewer));
     document.getElementById('left-toggle-info').addEventListener('click', () => toggleInfo(leftViewer));
-    
+
     // Right viewer controls
     document.getElementById('right-prev').addEventListener('click', () => previousPlanet(rightViewer));
     document.getElementById('right-next').addEventListener('click', () => nextPlanet(rightViewer));
     document.getElementById('right-auto-rotate').addEventListener('click', () => toggleAutoRotate(rightViewer));
     document.getElementById('right-reset').addEventListener('click', () => resetCamera(rightViewer));
     document.getElementById('right-toggle-info').addEventListener('click', () => toggleInfo(rightViewer));
-    
+
     // Category dropdowns
     document.getElementById('left-category').addEventListener('change', (e) => changePlanetCategory(leftViewer, e.target.value));
     document.getElementById('right-category').addEventListener('change', (e) => changePlanetCategory(rightViewer, e.target.value));
-    
+
     // Shared controls
     document.getElementById('sync-rotation').addEventListener('click', syncRotation);
     document.getElementById('reset-both').addEventListener('click', resetBothCameras);
-    
+
     // Focus tracking
     document.getElementById('left-viewer').addEventListener('click', () => setFocus('left'));
     document.getElementById('right-viewer').addEventListener('click', () => setFocus('right'));
-    
+
     // Search functionality
     setupSearch(leftViewer);
     setupSearch(rightViewer);
-    
+
     // Keyboard navigation
     document.addEventListener('keydown', handleKeyboard);
-    
+
     // Window resize
     window.addEventListener('resize', onWindowResize);
-    
+
     // Cleanup on unload
     window.addEventListener('beforeunload', cleanup);
 }
@@ -771,43 +771,30 @@ function toggleInfo(viewer) {
 }
 
 function setupSearch(viewer) {
-    const searchInput = document.getElementById(`${viewer.side}-search`);
-    
-    searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        if (!query) return;
-        
-        // Find matching planets
-        const matches = planets.filter((planet, index) => {
-            return planet.name.toLowerCase().includes(query) || 
-                   planet.id.toLowerCase().includes(query) ||
-                   planet.system.toLowerCase().includes(query);
+    const searchSelect = document.getElementById(`${viewer.side}-search`);
+
+    // fill dropdown with planets
+    function populateSelect() {
+        searchSelect.innerHTML = '<option disabled selected style="color: white;">Select a planet...</option>';
+        planets.forEach((planet, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = `${planet.name || 'Unnamed'} (${planet.system || 'Unknown'})`;
+            searchSelect.appendChild(option);
         });
-        
-        // If only one match, show it
-        if (matches.length === 1) {
-            const index = planets.indexOf(matches[0]);
-            showPlanet(viewer, index);
-            searchInput.value = '';
+    }
+    populateSelect();
+
+    // When a planet is chosen
+    searchSelect.addEventListener('change', (e) => {
+        const selectedIndex = parseInt(e.target.value, 10);
+        if (!isNaN(selectedIndex)) {
+            showPlanet(viewer, selectedIndex);
         }
     });
-    
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const query = e.target.value.toLowerCase();
-            const match = planets.find((planet) => {
-                return planet.name.toLowerCase().includes(query) || 
-                       planet.id.toLowerCase().includes(query);
-            });
-            
-            if (match) {
-                const index = planets.indexOf(match);
-                showPlanet(viewer, index);
-                searchInput.value = '';
-            }
-        }
-    });
+
 }
+
 
 function setFocus(side) {
     lastFocusedViewer = side;
@@ -818,8 +805,8 @@ function setFocus(side) {
 
 function handleKeyboard(event) {
     const viewer = lastFocusedViewer === 'left' ? leftViewer : rightViewer;
-    
-    switch(event.code) {
+
+    switch (event.code) {
         case 'ArrowLeft':
             event.preventDefault();
             previousPlanet(viewer);
@@ -845,16 +832,16 @@ function handleKeyboard(event) {
 
 function syncRotation() {
     const button = document.getElementById('sync-rotation');
-    
+
     // Toggle both to the same state
     const newState = !leftViewer.autoRotate;
     leftViewer.autoRotate = newState;
     rightViewer.autoRotate = newState;
-    
+
     // Update button states
     const leftBtn = document.getElementById('left-auto-rotate');
     const rightBtn = document.getElementById('right-auto-rotate');
-    
+
     if (newState) {
         leftBtn.classList.add('active');
         rightBtn.classList.add('active');
@@ -878,7 +865,7 @@ function onWindowResize() {
     leftViewer.camera.aspect = leftWidth / leftHeight;
     leftViewer.camera.updateProjectionMatrix();
     leftViewer.renderer.setSize(leftWidth, leftHeight);
-    
+
     // Right viewer
     const rightWidth = rightViewer.containerElement.clientWidth;
     const rightHeight = rightViewer.containerElement.clientHeight;
@@ -898,7 +885,7 @@ function cleanup() {
             }
         });
     }
-    
+
     cleanupViewer(leftViewer);
     cleanupViewer(rightViewer);
 }
@@ -916,7 +903,7 @@ function animate() {
         const radiansPerFrame = (radiansPerEarthDay / secondsPerDay) * (timeAccelerationBase / framesPerSecond);
         const autoRotateMultiplier = leftViewer.autoRotate ? 100 : 1;
         const finalRotationSpeed = radiansPerFrame * autoRotateMultiplier;
-        
+
         leftViewer.planetMesh.rotation.y += finalRotationSpeed;
         if (leftViewer.rotationAxisLine) {
             leftViewer.rotationAxisLine.rotation.y = leftViewer.planetMesh.rotation.y;
@@ -933,7 +920,7 @@ function animate() {
         const radiansPerFrame = (radiansPerEarthDay / secondsPerDay) * (timeAccelerationBase / framesPerSecond);
         const autoRotateMultiplier = rightViewer.autoRotate ? 100 : 1;
         const finalRotationSpeed = radiansPerFrame * autoRotateMultiplier;
-        
+
         rightViewer.planetMesh.rotation.y += finalRotationSpeed;
         if (rightViewer.rotationAxisLine) {
             rightViewer.rotationAxisLine.rotation.y = rightViewer.planetMesh.rotation.y;
@@ -962,7 +949,7 @@ function animate() {
     // Update controls and render
     leftViewer.controls.update();
     leftViewer.renderer.render(leftViewer.scene, leftViewer.camera);
-    
+
     rightViewer.controls.update();
     rightViewer.renderer.render(rightViewer.scene, rightViewer.camera);
 }
