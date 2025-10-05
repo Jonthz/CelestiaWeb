@@ -842,24 +842,61 @@ function onWindowResize() {
 
 function animate() {
     requestAnimationFrame(animate);
-    
-    // Auto rotate planet
-    if (autoRotate && planetMesh) {
-        planetMesh.rotation.y += 0.005;
+
+    // Rotate planet on its own axis based on orbital period
+    if (planetMesh && currentPlanet) {
+        // Get orbital period in Earth days
+        const orbitalPeriodDays = currentPlanet.ellipticalOrbit?.period || 365;
+
+        // For tidally locked planets: rotational period = orbital period
+        // Calculate rotation per frame (assuming 60 FPS)
+        // One full rotation (2π radians) in orbitalPeriodDays Earth days
+
+        // Real-time calculation:
+        // - 1 Earth day = 86400 seconds
+        // - At 60 FPS, 1 second = 60 frames
+        // - So 1 day = 86400 * 60 = 5,184,000 frames
+        // - Rotation per frame = (2π) / (orbitalPeriodDays * 5,184,000)
+
+        // But this is TOO slow for visualization, so we speed it up
+        // Time acceleration factor for visualization
+        const timeAccelerationBase = 3600; // Speed up by 3600x (1 hour = 1 second in real time)
+
+        // Calculate realistic rotation speed
+        // radiansPerEarthDay = 2π / orbitalPeriodDays
+        // radiansPerFrame = radiansPerEarthDay / (24 * 60 * 60 * 60) [60 FPS]
+        // With time acceleration: radiansPerFrame * timeAcceleration
+
+        const radiansPerEarthDay = (2 * Math.PI) / orbitalPeriodDays;
+        const framesPerSecond = 60;
+        const secondsPerDay = 86400;
+        const radiansPerFrame = (radiansPerEarthDay / secondsPerDay) * (timeAccelerationBase / framesPerSecond);
+
+        // If auto-rotate is enabled, use additional acceleration multiplier
+        const autoRotateMultiplier = autoRotate ? 100 : 1;
+        const finalRotationSpeed = radiansPerFrame * autoRotateMultiplier;
+
+        // Apply rotation
+        planetMesh.rotation.y += finalRotationSpeed;
+
+        // Also rotate the axis line to match the planet's rotation
+        if (rotationAxisLine) {
+            rotationAxisLine.rotation.y = planetMesh.rotation.y;
+        }
     }
-    
+
     // Animate star corona
     if (star) {
         star.children[1].rotation.y += 0.002;
         star.children[1].rotation.x += 0.001;
     }
-    
+
     // Animate starfield twinkling
     if (scene.userData.starfield) {
         const time = Date.now() * 0.001;
         scene.userData.starfield.material.uniforms.time.value = time;
     }
-    
+
     controls.update();
     renderer.render(scene, camera);
 }
