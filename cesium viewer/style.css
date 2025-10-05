@@ -1,182 +1,218 @@
  body {
-            margin: 0;
-            overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+     margin: 0;
+     overflow: hidden;
+     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+ }
 
-        #cesiumContainer {
-            width: 100%;
-            height: 100vh;
-            display: block;
-        }
+ .top-bar {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 60px;
+     background: rgba(0, 0, 0, 0.9);
+     backdrop-filter: blur(10px);
+     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     padding: 0 20px;
+     z-index: 1000;
+ }
 
-        #statsPanel {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(18, 18, 30, 0.95);
-            color: #E0F7FA;
-            padding: 18px;
-            border-radius: 12px;
-            font-size: 14px;
-            max-width: 300px;
-            max-height: 90vh;
-            overflow-y: auto;
-            border: 1px solid rgba(0, 191, 255, 0.3);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
-            z-index: 10;
-        }
+ .back-button {
+     background: linear-gradient(45deg, #34495e, #2c3e50);
+     color: white;
+     border: none;
+     padding: 10px 20px;
+     border-radius: 20px;
+     font-size: 14px;
+     font-weight: bold;
+     cursor: pointer;
+     transition: all 0.3s ease;
+     box-shadow: 0 3px 10px rgba(52, 73, 94, 0.3);
+ }
 
-        #statsPanel h3 {
-            color: #00BFFF;
-            margin: 0 0 10px;
-            font-size: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            text-align: center;
-        }
+ .back-button:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 5px 15px rgba(52, 73, 94, 0.4);
+ }
 
-        #statsPanel h4 {
-            color: #FFD700;
-            margin-top: 15px;
-            margin-bottom: 5px;
-            font-size: 16px;
-        }
+ #cesiumContainer {
+     width: 100%;
+     height: 100vh;
+     display: block;
+ }
 
-        #statsPanel ul {
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
+ #statsPanel {
+     margin-top: 3rem;
+     position: absolute;
+     top: 20px;
+     left: 20px;
+     background: rgba(18, 18, 30, 0.95);
+     color: #E0F7FA;
+     padding: 18px;
+     border-radius: 12px;
+     font-size: 14px;
+     max-width: 300px;
+     max-height: 90vh;
+     overflow-y: auto;
+     border: 1px solid rgba(0, 191, 255, 0.3);
+     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+     z-index: 10;
+ }
 
-        #statsPanel ul li {
-            margin: 6px 0;
-            padding-left: 10px;
-            border-left: 2px solid rgba(0, 191, 255, 0.15);
-        }
+ #statsPanel h3 {
+     color: #00BFFF;
+     margin: 0 0 10px;
+     font-size: 20px;
+     text-transform: uppercase;
+     letter-spacing: 1.5px;
+     text-align: center;
+ }
 
-        hr {
-            border: none;
-            height: 1px;
-            background-color: rgba(255, 255, 255, 0.15);
-            margin: 15px 0;
-        }
+ #statsPanel h4 {
+     color: #FFD700;
+     margin-top: 15px;
+     margin-bottom: 5px;
+     font-size: 16px;
+ }
 
-        .toggleSwitch {
-            margin-top: 15px;
-            background: rgba(30, 30, 45, 0.85);
-            padding: 10px 15px;
-            border-radius: 8px;
-            color: #FFD700;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            border: 1px solid rgba(255, 215, 0, 0.4);
-            transition: background 0.3s;
-        }
+ #statsPanel ul {
+     margin: 0;
+     padding: 0;
+     list-style: none;
+ }
 
-        .toggleSwitch:hover {
-            background: rgba(40, 40, 60, 0.95);
-        }
+ #statsPanel ul li {
+     margin: 6px 0;
+     padding-left: 10px;
+     border-left: 2px solid rgba(0, 191, 255, 0.15);
+ }
 
-        input[type="checkbox"] {
-            transform: scale(1.4);
-            cursor: pointer;
-        }
+ hr {
+     border: none;
+     height: 1px;
+     background-color: rgba(255, 255, 255, 0.15);
+     margin: 15px 0;
+ }
 
-        #footerNote {
-            position: absolute;
-            bottom: 10px;
-            right: 15px;
-            color: #AAAAAA;
-            font-size: 11px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 4px 8px;
-            border-radius: 4px;
-            z-index: 10;
-        }
+ .toggleSwitch {
+     margin-top: 15px;
+     background: rgba(30, 30, 45, 0.85);
+     padding: 10px 15px;
+     border-radius: 8px;
+     color: #FFD700;
+     font-size: 15px;
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     cursor: pointer;
+     border: 1px solid rgba(255, 215, 0, 0.4);
+     transition: background 0.3s;
+ }
 
-        #rightPanel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            /* Position on the right side */
-            background: rgba(18, 18, 30, 0.95);
-            color: #E0F7FA;
-            padding: 15px;
-            border-radius: 12px;
-            width: 250px;
-            max-height: 95vh;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255, 0, 255, 0.3);
-            /* Use a different accent color (e.g., magenta) */
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-        }
+ .toggleSwitch:hover {
+     background: rgba(40, 40, 60, 0.95);
+ }
 
-        #searchPanel {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 15px;
-        }
+ input[type="checkbox"] {
+     transform: scale(1.4);
+     cursor: pointer;
+ }
 
-        #searchBox {
-            flex-grow: 1;
-            padding: 8px;
-            border: 1px solid #00BFFF;
-            border-radius: 5px;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-        }
+ #footerNote {
+     position: absolute;
+     bottom: 10px;
+     right: 15px;
+     color: #AAAAAA;
+     font-size: 11px;
+     background: rgba(0, 0, 0, 0.6);
+     padding: 4px 8px;
+     border-radius: 4px;
+     z-index: 10;
+ }
 
-        #searchBtn {
-            padding: 8px 10px;
-            background: #FFD700;
-            /* Gold button */
-            color: #12121E;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+ #rightPanel {
+     margin-top: 3rem;
+     position: absolute;
+     top: 20px;
+     right: 20px;
+     /* Position on the right side */
+     background: rgba(18, 18, 30, 0.95);
+     color: #E0F7FA;
+     padding: 15px;
+     border-radius: 12px;
+     width: 250px;
+     max-height: 80vh;
+     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+     border: 1px solid rgba(255, 0, 255, 0.3);
+     /* Use a different accent color (e.g., magenta) */
+     z-index: 10;
+     display: flex;
+     flex-direction: column;
+ }
 
-        #searchBtn:hover {
-            background: #ffec80;
-        }
+ #searchPanel {
+     display: flex;
+     gap: 5px;
+     margin-bottom: 15px;
+ }
 
-        #candidatesList {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            overflow-y: auto;
-            /* Essential for long lists */
-            flex-grow: 1;
-        }
+ #searchBox {
+     flex-grow: 1;
+     padding: 8px;
+     border: 1px solid #00BFFF;
+     border-radius: 5px;
+     background: rgba(0, 0, 0, 0.5);
+     color: white;
+ }
 
-        #candidatesList li {
-            padding: 6px 8px;
-            margin-bottom: 3px;
-            border-left: 3px solid transparent;
-            cursor: pointer;
-            transition: background 0.2s, border-left-color 0.2s;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 13px;
-        }
+ #searchBtn {
+     padding: 8px 10px;
+     background: #FFD700;
+     /* Gold button */
+     color: #12121E;
+     border: none;
+     border-radius: 5px;
+     cursor: pointer;
+     transition: background 0.2s;
+ }
 
-        #candidatesList li:hover {
-            background: rgba(0, 191, 255, 0.1);
-            /* Light highlight on hover */
-            border-left-color: #00BFFF;
-        }
+ #searchBtn:hover {
+     background: #ffec80;
+ }
 
-        .selected-candidate {
-            background: rgba(255, 215, 0, 0.2) !important;
-            /* Yellow highlight for active planet */
-            border-left-color: #FFD700 !important;
-            font-weight: bold;
-        }
+ #candidatesList {
+     list-style: none;
+     padding: 0;
+     margin: 0;
+     overflow-y: auto;
+     /* Essential for long lists */
+     flex-grow: 1;
+ }
+
+ #candidatesList li {
+     padding: 6px 8px;
+     margin-bottom: 3px;
+     border-left: 3px solid transparent;
+     cursor: pointer;
+     transition: background 0.2s, border-left-color 0.2s;
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     font-size: 13px;
+ }
+
+ #candidatesList li:hover {
+     background: rgba(0, 191, 255, 0.1);
+     /* Light highlight on hover */
+     border-left-color: #00BFFF;
+ }
+
+ .selected-candidate {
+     background: rgba(255, 215, 0, 0.2) !important;
+     /* Yellow highlight for active planet */
+     border-left-color: #FFD700 !important;
+     font-weight: bold;
+ }
