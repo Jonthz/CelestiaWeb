@@ -337,12 +337,18 @@
 
             <!-- Planet Selector -->
             <div class="planet-selector">
+                <select id="left-category" class="search-dropdown" style="margin-bottom: 10px;">
+                    <option value="earth" selected>Earth</option>
+                    <option value="jupiter">Jupiter</option>
+                    <option value="exoplanets">Another Planets</option>
+                </select>
                 <input 
                     type="text" 
                     id="left-search" 
                     class="search-dropdown" 
                     placeholder="Search planet by name or ID..."
                     autocomplete="off"
+                    style="display: none;"
                 />
                 <div id="left-dropdown" style="display: none;"></div>
             </div>
@@ -430,12 +436,18 @@
 
             <!-- Planet Selector -->
             <div class="planet-selector">
+                <select id="right-category" class="search-dropdown" style="margin-bottom: 10px;">
+                    <option value="earth">Earth</option>
+                    <option value="jupiter" selected>Jupiter</option>
+                    <option value="exoplanets">Another Planets</option>
+                </select>
                 <input 
                     type="text" 
                     id="right-search" 
                     class="search-dropdown" 
                     placeholder="Search planet by name or ID..."
                     autocomplete="off"
+                    style="display: none;"
                 />
                 <div id="right-dropdown" style="display: none;"></div>
             </div>

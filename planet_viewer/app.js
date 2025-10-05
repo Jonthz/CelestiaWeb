@@ -732,9 +732,8 @@ function updatePlanetInfo() {
     document.getElementById('planet-name-detail').textContent = currentPlanet.name;
     //document.getElementById('planet-mass').textContent = currentPlanet.mass;
     
-    // Calculate distance from orbital parameters if not provided
-    const distance = currentPlanet.distance || 
-        `${(currentPlanet.ellipticalOrbit.semiMajorAxis * 149.6).toFixed(2)} million km`;
+    // Use the distance parameter from the data
+    const distance = currentPlanet.distance || 'Distance unknown';
     document.getElementById('planet-distance').textContent = distance;
     
     document.getElementById('planet-system').textContent = currentPlanet.system;

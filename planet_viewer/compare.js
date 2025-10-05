@@ -16,7 +16,8 @@ const leftViewer = {
     star: null,
     autoRotate: true,
     showStar: true,
-    containerElement: null
+    containerElement: null,
+    availablePlanets: []
 };
 
 const rightViewer = {
@@ -32,7 +33,8 @@ const rightViewer = {
     star: null,
     autoRotate: true,
     showStar: true,
-    containerElement: null
+    containerElement: null,
+    availablePlanets: []
 };
 
 const planetSize = 2;
@@ -50,15 +52,23 @@ async function init() {
     setupViewer(rightViewer, 'right-scene');
     
     updateLoadingText("Loading planets...");
-    if (planets.length > 0) {
-        showPlanet(leftViewer, 0);
-    }
-    if (planets.length > 1) {
-        showPlanet(rightViewer, 1);
-    }
+    
+    // Initialize viewers with default categories
+    leftViewer.availablePlanets = getPlanetsForCategory('earth');
+    rightViewer.availablePlanets = getPlanetsForCategory('jupiter');
     
     updateLoadingText("Initializing controls...");
     setupEventListeners();
+    
+    // Set dropdown values after initialization
+    document.getElementById('left-category').value = 'earth';
+    document.getElementById('right-category').value = 'jupiter';
+    
+    // Wait a bit for everything to settle, then trigger initial category changes
+    setTimeout(() => {
+        changePlanetCategory(leftViewer, 'earth');
+        changePlanetCategory(rightViewer, 'jupiter');
+    }, 100);
     
     hideLoadingScreen();
     
@@ -85,54 +95,68 @@ function hideLoadingScreen() {
     }
 }
 
+// Global datasets
+let solarSystemPlanets = [];
+let exoplanets = [];
+
 async function loadPlanetData() {
     try {
+        // Load Solar System data (Earth & Jupiter)
+        updateLoadingText("Loading Solar System data...");
+        const solarResponse = await fetch('./solarSystemData.json');
+        solarSystemPlanets = await solarResponse.json();
+        console.log(`✅ Loaded ${solarSystemPlanets.length} Solar System planets`);
+
+        // Load exoplanet data
         updateLoadingText("Fetching KOI candidate data...");
-        const response = await fetch('./koiData.json');
-        planets = await response.json();
-        console.log(`✅ Loaded ${planets.length} KOI planets`);
-        updateLoadingText(`Successfully loaded ${planets.length} KOI candidates!`);
+        const exoResponse = await fetch('./koiData.json');
+        exoplanets = await exoResponse.json();
+        console.log(`✅ Loaded ${exoplanets.length} exoplanets`);
+        
+        // Set default planets array to exoplanets
+        planets = exoplanets;
+        updateLoadingText(`Successfully loaded all planetary data!`);
     } catch (error) {
-        console.error('Error loading KOI data, trying Kepler data:', error);
-        try {
-            const response = await fetch('./keplerData.json');
-            planets = await response.json();
-            console.log(`Loaded ${planets.length} Kepler planets`);
-        } catch (keplerError) {
-            console.error('Error loading Kepler data, falling back to original:', keplerError);
-            try {
-                const fallbackResponse = await fetch('./exoplanetData.json');
-                const fallbackData = await fallbackResponse.json();
-                planets = fallbackData.map((planet, index) => ({
-                    id: `FALLBACK_${index}`,
-                    star: `Star-${planet.system}`,
-                    class: "Planet",
-                    radius: planet.type === "Gas Giant" ? 71492 : 
-                           planet.type === "Hot Jupiter" ? 47898 :
-                           planet.type === "Super-Earth" ? 8967 : 6371,
-                    texture: `${planet.name}.jpg`,
-                    ellipticalOrbit: {
-                        period: planet.orbitalPeriod || 365,
-                        semiMajorAxis: 1.0,
-                        eccentricity: 0.0,
-                        inclination: 89.0
-                    },
-                    name: planet.name,
-                    system: planet.system,
-                    type: planet.type,
-                    mass: planet.mass,
-                    discoveryYear: planet.discoveryYear,
-                    mission: planet.mission,
-                    status: planet.status,
-                    confidence: planet.confidence,
-                    inHabitableZone: planet.inHabitableZone
-                }));
-            } catch (fallbackError) {
-                console.error('Error loading fallback data:', fallbackError);
-                planets = [];
-            }
-        }
+        console.error('Error loading planet data:', error);
+        // Fallback data
+        solarSystemPlanets = [];
+        exoplanets = [];
+        planets = [];
     }
+}
+
+function getPlanetsForCategory(category) {
+    switch(category) {
+        case 'earth':
+            return solarSystemPlanets.filter(p => p.name === 'Earth');
+        case 'jupiter':
+            return solarSystemPlanets.filter(p => p.name === 'Jupiter');
+        case 'exoplanets':
+            return exoplanets;
+        default:
+            return exoplanets;
+    }
+}
+
+function changePlanetCategory(viewer, category) {
+    const categoryPlanets = getPlanetsForCategory(category);
+    viewer.availablePlanets = categoryPlanets;
+    viewer.currentPlanetIndex = 0;
+    
+    // Show search input only for exoplanets
+    const searchInput = document.getElementById(`${viewer.side}-search`);
+    if (category === 'exoplanets') {
+        searchInput.style.display = 'block';
+    } else {
+        searchInput.style.display = 'none';
+    }
+    
+    // Show the first planet of the selected category
+    if (categoryPlanets.length > 0) {
+        showPlanet(viewer, 0);
+    }
+    
+    updateNavigation(viewer);
 }
 
 function setupViewer(viewer, containerId) {
@@ -476,6 +500,8 @@ function addSurfaceDetails(context, planetType) {
 
 // Available textures in the textures folder
 const availableTextures = [
+    '2k_earth_daymap.jpg',
+    '2k_jupiter.jpg',
     'GJ_504_b.jpg',
     'HAT-P-11_b.jpg',
     'HD_189733_b.jpg',
@@ -496,21 +522,26 @@ function loadPlanetTexture(planetData) {
 
         // Check if the texture exists in our available textures
         if (availableTextures.includes(planetData.texture)) {
-            console.log(`Loading texture: ${texturePath}`);
+            console.log(`Loading texture: ${texturePath} for planet ${planetData.name}`);
             return textureLoader.load(
                 texturePath,
-                undefined, // onLoad
+                (texture) => {
+                    console.log(`✅ Successfully loaded texture for ${planetData.name}`);
+                },
                 undefined, // onProgress
                 (error) => {
-                    console.warn(`Failed to load texture ${texturePath}, using fallback`);
+                    console.warn(`Failed to load texture ${texturePath} for ${planetData.name}, using fallback`);
                     return generateRealisticTexture(planetData);
                 }
             );
+        } else {
+            console.warn(`Texture ${planetData.texture} not found in available textures for ${planetData.name}`);
         }
     }
 
-    // If no texture or texture doesn't exist, assign random one
-    const randomTexture = availableTextures[Math.floor(Math.random() * availableTextures.length)];
+    // If no texture or texture doesn't exist, assign random one from exoplanet textures (excluding Earth/Jupiter)
+    const exoplanetTextures = availableTextures.filter(t => !t.includes('2k_'));
+    const randomTexture = exoplanetTextures[Math.floor(Math.random() * exoplanetTextures.length)];
     const randomPath = `../textures/${randomTexture}`;
     console.log(`Using random texture: ${randomPath} for planet ${planetData.name}`);
 
@@ -593,7 +624,7 @@ function createRotationAxis(planetData, planetSize) {
 }
 
 function showPlanet(viewer, index) {
-    if (index < 0 || index >= planets.length) return;
+    if (index < 0 || index >= viewer.availablePlanets.length) return;
 
     if (viewer.planetMesh) {
         viewer.scene.remove(viewer.planetMesh);
@@ -611,7 +642,7 @@ function showPlanet(viewer, index) {
     }
 
     viewer.currentPlanetIndex = index;
-    viewer.currentPlanet = planets[index];
+    viewer.currentPlanet = viewer.availablePlanets[index];
 
     viewer.planetMesh = createPlanet(viewer.currentPlanet);
     viewer.scene.add(viewer.planetMesh);
@@ -662,17 +693,17 @@ function updatePlanetInfo(viewer) {
 function updateNavigation(viewer) {
     const side = viewer.side;
     document.getElementById(`${side}-counter`).textContent = viewer.currentPlanetIndex + 1;
-    document.getElementById(`${side}-total`).textContent = planets.length;
+    document.getElementById(`${side}-total`).textContent = viewer.availablePlanets.length;
     
     const prevBtn = document.getElementById(`${side}-prev`);
     const nextBtn = document.getElementById(`${side}-next`);
     
     prevBtn.disabled = viewer.currentPlanetIndex === 0;
-    nextBtn.disabled = viewer.currentPlanetIndex === planets.length - 1;
+    nextBtn.disabled = viewer.currentPlanetIndex === viewer.availablePlanets.length - 1;
 }
 
 function nextPlanet(viewer) {
-    if (viewer.currentPlanetIndex < planets.length - 1) {
+    if (viewer.currentPlanetIndex < viewer.availablePlanets.length - 1) {
         showPlanet(viewer, viewer.currentPlanetIndex + 1);
     }
 }
@@ -714,6 +745,10 @@ function setupEventListeners() {
     document.getElementById('right-auto-rotate').addEventListener('click', () => toggleAutoRotate(rightViewer));
     document.getElementById('right-reset').addEventListener('click', () => resetCamera(rightViewer));
     document.getElementById('right-toggle-info').addEventListener('click', () => toggleInfo(rightViewer));
+    
+    // Category dropdowns
+    document.getElementById('left-category').addEventListener('change', (e) => changePlanetCategory(leftViewer, e.target.value));
+    document.getElementById('right-category').addEventListener('change', (e) => changePlanetCategory(rightViewer, e.target.value));
     
     // Shared controls
     document.getElementById('sync-rotation').addEventListener('click', syncRotation);

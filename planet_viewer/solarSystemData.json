@@ -1,0 +1,48 @@
+[
+  {
+    "id": "EARTH_SOL_03",
+    "star": "Sun",
+    "class": "Planet",
+    "radius": 6371,
+    "texture": "2k_earth_daymap.jpg",
+    "ellipticalOrbit": {
+      "period": 365.25,
+      "semiMajorAxis": 1.0,
+      "eccentricity": 0.0167,
+      "inclination": 23.44
+    },
+    "name": "Earth",
+    "system": "Solar System",
+    "type": "Terrestrial",
+    "mass": "1.00 Earths",
+    "discoveryYear": "Ancient",
+    "mission": "Direct Observation",
+    "status": "confirmed",
+    "confidence": 1.0,
+    "distance": "0 light years (Our Home Planet)",
+    "inHabitableZone": true
+  },
+  {
+    "id": "JUPITER_SOL_05",
+    "star": "Sun",
+    "class": "Planet",
+    "radius": 69911,
+    "texture": "2k_jupiter.jpg",
+    "ellipticalOrbit": {
+      "period": 4332.59,
+      "semiMajorAxis": 5.204,
+      "eccentricity": 0.0489,
+      "inclination": 3.13
+    },
+    "name": "Jupiter",
+    "system": "Solar System",
+    "type": "Gas Giant",
+    "mass": "317.8 Earths",
+    "discoveryYear": "Ancient",
+    "mission": "Direct Observation",
+    "status": "confirmed",
+    "confidence": 1.0,
+    "distance": "0 light years (Our Solar System)",
+    "inHabitableZone": false
+  }
+]
