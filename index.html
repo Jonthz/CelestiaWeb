@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,8 +41,15 @@
         }
 
         @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
 
         .container {
@@ -67,8 +75,15 @@
         }
 
         @keyframes colorShift {
-            0%, 100% { filter: hue-rotate(0deg); }
-            50% { filter: hue-rotate(180deg); }
+
+            0%,
+            100% {
+                filter: hue-rotate(0deg);
+            }
+
+            50% {
+                filter: hue-rotate(180deg);
+            }
         }
 
         .subtitle {
@@ -151,25 +166,26 @@
             h1 {
                 font-size: 2.5rem;
             }
-            
+
             .options {
                 flex-direction: column;
                 align-items: center;
             }
-            
+
             .option-card {
                 width: 280px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="stars"></div>
-    
+
     <div class="container">
         <h1>Celestia Web</h1>
         <p class="subtitle">Explore the Universe of Exoplanets</p>
-        
+
         <div class="options">
             <a href="solar_view/" class="option-card" style="display: none;">
                 <span class="option-icon">★</span>
@@ -190,9 +206,18 @@
                     between different worlds with intuitive controls.
                 </p>
             </a>
+
+            <a href="cesium viewer/" class="option-card">
+                <span class="option-icon">●</span>
+                <h3 class="option-title">Collective Data Viewer</h3>
+                <p class="option-description">
+                    Explore our full exoplanet dataset in an interactive 3D viewer. Analyze neural network predictions,
+                    compare metrics, and identify real exoplanets — green for confirmed, red for false positives.
+                </p>
+            </a>
         </div>
     </div>
-    
+
     <div class="footer">
         Powered by NASA Exoplanet Data
     </div>
@@ -201,11 +226,11 @@
         function createStars() {
             const starsContainer = document.querySelector('.stars');
             const starCount = 150;
-            
+
             for (let i = 0; i < starCount; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
-                
+
                 const size = Math.random() * 3 + 1;
                 star.style.width = size + 'px';
                 star.style.height = size + 'px';
@@ -213,12 +238,13 @@
                 star.style.top = Math.random() * 100 + '%';
                 star.style.animationDelay = Math.random() * 4 + 's';
                 star.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                
+
                 starsContainer.appendChild(star);
             }
         }
-        
+
         createStars();
     </script>
 </body>
+
 </html>
