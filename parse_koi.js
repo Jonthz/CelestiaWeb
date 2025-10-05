@@ -53,10 +53,12 @@ function parseEntry(entry) {
         name: `KOI-${id.replace('K', '').replace('.', '.')}`,
         system: star.replace('Star-', ''),
         type: "Unknown",
+        mass: "Unknown",
         discoveryYear: 2024,
         mission: "Kepler",
         status: "candidate",
         confidence: 0.5,
+        distance: "Distance unknown",
         inHabitableZone: false
     };
     
@@ -120,6 +122,13 @@ function parseEntry(entry) {
                 const percentMatch = confMatch[1].match(/([\d.]+)%/);
                 if (percentMatch) {
                     planet.confidence = parseFloat(percentMatch[1]) / 100;
+                } else {
+                    // If no percentage found, try to parse as decimal
+                    const decimalMatch = confMatch[1].match(/([\d.]+)/);
+                    if (decimalMatch) {
+                        const val = parseFloat(decimalMatch[1]);
+                        planet.confidence = val > 1 ? val / 100 : val;
+                    }
                 }
             }
         }
@@ -129,12 +138,12 @@ function parseEntry(entry) {
     planet.type = determinePlanetType(planet.radius);
 
     // Estimate mass based on radius and type
-    //planet.mass = estimateMass(planet.radius, planet.type);
+    planet.mass = estimateMass(planet.radius, planet.type);
 
     // Check if in habitable zone (rough estimate based on semi-major axis)
     planet.inHabitableZone = isInHabitableZone(planet.ellipticalOrbit.semiMajorAxis);
 
-    // If confidence wasn't parsed from file, use default
+    // If distance wasn't parsed from file, use default
     if (!planet.distance) {
         planet.distance = "Distance unknown";
     }
@@ -157,9 +166,25 @@ function estimateMass(radius, type) {
     const earthRadius = 6371;
     const relativeSize = radius / earthRadius;
     
-    if (type === "Gas Giant") return `${(relativeSize * 0.3).toFixed(2)} Jupiters`;
-    if (type === "Hot Jupiter") return `${(relativeSize * 0.2).toFixed(2)} Jupiters`;
-    return `${(relativeSize * relativeSize * 0.8).toFixed(2)} Earths`;
+    if (type === "Gas Giant") {
+        const jupiterMass = Math.min(relativeSize * 0.4, 50); // Cap at 50 Jupiter masses
+        return `${jupiterMass.toFixed(2)} Jupiters`;
+    }
+    if (type === "Neptune-like") {
+        const earthMass = relativeSize * relativeSize * 3.0; // Neptune density factor
+        return `${earthMass.toFixed(2)} Earths`;
+    }
+    if (type === "Sub-Neptune") {
+        const earthMass = relativeSize * relativeSize * 2.5; // Density factor
+        return `${earthMass.toFixed(2)} Earths`;
+    }
+    if (type === "Super-Earth") {
+        const earthMass = relativeSize * relativeSize * 1.2;
+        return `${earthMass.toFixed(2)} Earths`;
+    }
+    // Terrestrial planets
+    const earthMass = relativeSize * relativeSize * 1.0;
+    return `${earthMass.toFixed(2)} Earths`;
 }
 
 function isInHabitableZone(semiMajorAxis) {
