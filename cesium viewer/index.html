@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Is it an Exoplanet? | NASA Space Apps Challenge</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.118/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.118/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="cesiumContainer"></div>
+    <div id="statsPanel">
+        <h3>Exoplanet Dashboard</h3>
+        <h4>Global Stats</h4>
+        <ul id="globalStatsList">
+            <li>Loading data...</li>
+        </ul>
+        <hr />
+        <h4>Selected Planet Info</h4>
+        <ul id="selectedPlanetList">
+            <li>Click an exoplanet to see details...</li>
+        </ul>
+        <div class="toggleSwitch">
+            <label for="modeToggle">🔬 Research Mode</label>
+            <input type="checkbox" id="modeToggle" />
+        </div>
+    </div>
+    <div id="rightPanel">
+        <div id="searchPanel">
+            <input type="text" id="searchBox" placeholder="Enter KepID or KOI name..." />
+            <button id="searchBtn">Go</button>
+        </div>
+        <ul id="candidatesList">
+            <li>Loading list...</li>
+        </ul>
+    </div>
+
+    <div id="footerNote">Made with NASA Exoplanet Data 🌌</div>
+
+    <script>
+        let isResearcher = false;
+        let focusedEntity = null;
+        let originalCameraState = null;
+        let entitiesMap = new Map();
+        const candidatesList = document.getElementById("candidatesList");
+
+        const searchBox = document.getElementById("searchBox");
+        const searchBtn = document.getElementById("searchBtn");
+
+        function updateSelectedPlanetInfo(entity) {
+            if (Cesium.defined(entity) && Cesium.defined(entity.properties) && Cesium.defined(entity.properties.data)) {
+                const data = entity.properties.data.getValue(); // Get the stored raw data
+
+                let statusIcon;
+                switch (data.status) {
+                    case "CONFIRMED":
+                        statusIcon = "✅ Confirmed";
+                        break;
+                    case "FALSE POSITIVE":
+                        statusIcon = "❌ False Positive";
+                        break;
+                    default:
+                        statusIcon = "🟡 Candidate";
+                }
+
+                selectedPlanetList.innerHTML = `
+                    <li>✨ <b>Name:</b> ${data.kepoi_name || data.kepid}</li>
+                    <li><b>Status:</b> ${statusIcon}</li>
+                    <li style="margin-top: 10px;"><b>KepID:</b> ${data.kepid}</li>
+                    ${isResearcher ? `
+                        <li style="color: #64ffda;"><b>Prediction:</b> ${data.koi_disposition_pred || 'N/A'}</li>
+                        <li><b>RA/Dec:</b> ${data.ra.toFixed(2)}° / ${data.dec.toFixed(2)}°</li>
+                        <li><b>Orbital Period:</b> ${data.koi_period || "N/A"} days</li>
+                        <li><b>Planet Radius:</b> ${data.koi_prad || "N/A"} R⊕</li>
+                    ` : '<li><i style="color:#FFD700;">Enable Research Mode for detailed data.</i></li>'}
+                `;
+
+                viewer.flyTo(entity, {
+                    duration: 1.5,
+                    offset: new Cesium.HeadingPitchRange(
+                        Cesium.Math.toRadians(0),
+                        Cesium.Math.toRadians(-25),
+                        200000.0
+                    )
+                });
+
+            } else {
+                selectedPlanetList.innerHTML = '<li>Click an exoplanet to see details...</li>';
+            }
+        }
+
+        function parseCSV(text) {
+            const lines = text.trim().split(/\r?\n/);
+            const header = lines.shift().match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+            const rows = lines.map(line => {
+                const fields = [];
+                const re = /("([^"]*)"|[^,]+)(?=,|$)/g;
+                let m;
+                while ((m = re.exec(line))) {
+                    let v = m[2] !== undefined ? m[2] : m[1];
+                    v = v.trim();
+                    if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1);
+                    fields.push(v);
+                }
+                return fields;
+            });
+            return { header, rows };
+        }
+
+        const globalStatsList = document.getElementById("globalStatsList");
+        const selectedPlanetList = document.getElementById("selectedPlanetList");
+
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+            timeline: false,
+            animation: false,
+            sceneMode: Cesium.SceneMode.SCENE3D,
+            infoBox: false,
+            baseLayerPicker: false,
+            geocoder: false,
+            homeButton: false,
+            scene3DOnly: true,
+            skyBox: new Cesium.SkyBox({
+                sources: {
+                    positiveX: Cesium.buildModuleUrl('Assets/Textures/SkyBox/tycho2/stars-hires-2k/tycho2_positiveX.jpg'),
+                    negativeX: Cesium.buildModuleUrl('Assets/Textures/SkyBox/tycho2/stars-hires-2k/tycho2_negativeX.jpg'),
+                    positiveY: Cesium.buildModuleUrl('Assets/Textures/SkyBox/tycho2/stars-hires-2k/tycho2_positiveY.jpg'),
+                    negativeY: Cesium.buildModuleUrl('Assets/Textures/SkyBox/tycho2/stars-hires-2k/tycho2_negativeY.jpg'),
+                    positiveZ: Cesium.buildModuleUrl('Assets/Textures/SkyBox/tycho2/stars-hires-2k/tycho2_positiveZ.jpg'),
+                    negativeZ: Cesium.buildModuleUrl('Assets/Textures/SkyBox/tycho2/stars-hires-2k/tycho2_negativeZ.jpg')
+                }
+            }),
+            skyAtmosphere: false,
+        });
+
+        document.getElementById("searchBtn").addEventListener("click", () => {
+            const query = document.getElementById("searchBox").value.trim().toUpperCase();
+            if (!query) return;
+
+            const match = viewer.entities.values.find(e =>
+                e.name && e.name.toUpperCase().includes(query)
+            );
+
+            if (match) {
+                viewer.selectedEntity = match;
+                updateSelectedPlanetInfo(match)
+                viewer.flyTo(match, {
+                    duration: 2.0,
+                    offset: new Cesium.HeadingPitchRange(0, Cesium.Math.toRadians(-45), 500000.0)
+                });
+            } else {
+                alert("No entity found for: " + query);
+            }
+        });
+
+        document.getElementById("searchBox").addEventListener("input", () => {
+            const query = document.getElementById("searchBox").value.trim().toUpperCase();
+            const listItems = document.querySelectorAll('#candidatesList li');
+
+            listItems.forEach(item => {
+                const itemName = item.textContent.trim().toUpperCase();
+                const kepid = item.getAttribute('data-kepid').toUpperCase();
+
+                if (itemName.includes(query) || kepid.includes(query)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+        handler.setInputAction(function (click) {
+            const pickedObject = viewer.scene.pick(click.position);
+
+            if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
+                return;
+            }
+
+            if (!Cesium.defined(pickedObject) && focusedEntity) {
+                if (originalCameraState) {
+                    viewer.camera.flyTo({
+                        destination: originalCameraState.destination,
+                        orientation: originalCameraState.orientation,
+                        duration: 1.0 // Smooth transition back
+                    });
+                    focusedEntity = null;
+                    originalCameraState = null;
+                    selectedPlanetList.innerHTML = '<li>Click an exoplanet to see details...</li>';
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        viewer.scene.globe.baseColor = Cesium.Color.BLACK;
+        viewer.scene.globe.showGroundAtmosphere = false;
+        viewer.scene.highDynamicRange = true;
+        viewer.selectedEntityChanged.addEventListener(function (entity) {
+            if (Cesium.defined(entity) && Cesium.defined(entity.properties) && Cesium.defined(entity.properties.data)) {
+                if (!focusedEntity) {
+                    originalCameraState = {
+                        destination: viewer.camera.position.clone(),
+                        orientation: {
+                            heading: viewer.camera.heading,
+                            pitch: viewer.camera.pitch,
+                            roll: viewer.camera.roll
+                        }
+                    };
+                }
+
+                focusedEntity = entity;
+                updateSelectedPlanetInfo(entity);
+
+            }
+        });
+
+        const RA_DEC_SCALE_FACTOR = 5;
+        const BASE_PLANET_RADIUS = 30000.0;
+        const RADIUS_MULTIPLIER = 8000.0;
+
+        fetch("results.csv")
+            .then(res => res.text())
+            .then(csv => {
+                const parsed = parseCSV(csv);
+                const header = parsed.header.map(h => h.replace(/"/g, "").trim());
+                const stats = { CONFIRMED: 0, FALSE_POSITIVE: 0, CANDIDATE: 0 };
+                let entities = [];
+
+                parsed.rows.forEach(fields => {
+                    if (fields.length !== header.length) return;
+                    const row = {};
+                    for (let i = 0; i < header.length; i++) row[header[i]] = fields[i];
+
+                    const pred = (row.koi_disposition_pred || row.koi_disposition || row.prediction || "").toUpperCase().trim();
+
+                    if (pred === "CONFIRMED") stats.CONFIRMED++;
+                    else if (pred === "FALSE POSITIVE") stats.FALSE_POSITIVE++;
+
+                    let color = Cesium.Color.YELLOW.withAlpha(0.8); // Candidate
+                    if (pred === "CONFIRMED") color = Cesium.Color.GREEN.withAlpha(0.9);
+                    else if (pred === "FALSE POSITIVE") color = Cesium.Color.RED.withAlpha(0.9);
+
+                    let ra = parseFloat(row.ra);
+                    let dec = parseFloat(row.dec);
+                    if (isNaN(ra) || isNaN(dec)) return;
+
+                    if (ra >= 0 && ra <= 24) ra = ra * 15;
+                    const longitude = ra > 180 ? ra - 360 : ra;
+                    const latitude = dec;
+
+                    const position = Cesium.Cartesian3.fromDegrees(
+                        longitude * RA_DEC_SCALE_FACTOR,
+                        latitude * RA_DEC_SCALE_FACTOR
+                    );
+
+                    const koiPrad = parseFloat(row.koi_prad);
+                    let radius = BASE_PLANET_RADIUS;
+                    if (!isNaN(koiPrad) && koiPrad > 0) {
+                        radius = Math.max(BASE_PLANET_RADIUS, koiPrad * RADIUS_MULTIPLIER);
+                    }
+
+                    const entityData = {
+                        kepid: row.kepid,
+                        kepoi_name: row.kepoi_name,
+                        koi_disposition_pred: row.koi_disposition_pred || row.koi_disposition,
+                        status: pred,
+                        ra: ra,
+                        dec: dec,
+                        koi_period: row.koi_period,
+                        koi_prad: row.koi_prad,
+                    };
+
+                    const entity = viewer.entities.add({
+                        name: row.kepoi_name || row.kepid,
+                        position: position,
+                        point: {
+                            pixelSize: pred === "CONFIRMED" ? 12 : 8,
+                            color: color,
+                        },
+                        ellipsoid: {
+                            radii: new Cesium.Cartesian3(radius, radius, radius),
+                            material: color.withAlpha(0),
+                            show: true
+                        },
+                        properties: {
+                            data: entityData
+                        }
+                    });
+
+                    const kepid = row.kepid;
+                    entitiesMap.set(kepid, entity);
+
+                    entity.ellipsoid.stRotation = new Cesium.CallbackProperty(
+                        () => (Date.now() % 100000) / 100000 * Math.PI * 2,
+                        false
+                    );
+
+                    const listItem = document.createElement('li');
+                    listItem.textContent = row.kepoi_name || row.kepid;
+                    listItem.setAttribute('data-kepid', kepid);
+                    listItem.addEventListener('click', () => {
+                        viewer.selectedEntity = entity;
+                    });
+
+                    candidatesList.appendChild(listItem);
+                    entities.push(entity);
+                });
+
+                candidatesList.firstElementChild.remove();
+
+                globalStatsList.innerHTML = `
+                    <li>🌍 Total Objects: ${parsed.rows.length}</li>
+                    <li>✅ Confirmed: ${stats.CONFIRMED}</li>
+                    <li>❌ False Positive: ${stats.FALSE_POSITIVE}</li>
+                `;
+
+                viewer.zoomTo(viewer.entities, new Cesium.HeadingPitchRange(
+                    Cesium.Math.toRadians(0),
+                    Cesium.Math.toRadians(-90),
+                    15000000.0
+                ));
+            })
+            .catch(err => console.error("Error loading CSV data:", err));
+
+        fetch("metrics.json")
+            .then(res => res.json())
+            .then(metrics => {
+                const metricsHTML = `
+                    <hr />
+                    <h4>Model Performance Metrics</h4>
+                    <li>📊 Accuracy: <b style="color:#00BFFF">${(metrics.accuracy * 100).toFixed(2)}%</b></li>
+                    <li>🎯 Precision: ${(metrics.precision * 100).toFixed(2)}%</li>
+                    <li>🔔 Recall: ${(metrics.recall * 100).toFixed(2)}%</li>
+                    <li>📝 F1-score: ${(metrics.f1_score * 100).toFixed(2)}%</li>
+                `;
+                globalStatsList.innerHTML += metricsHTML;
+            })
+            .catch(err => console.error("Error loading metrics.json. Ensure it's in the same directory.", err));
+
+
+        document.getElementById("modeToggle").addEventListener("change", (e) => {
+            isResearcher = e.target.checked;
+            const selectedEntity = viewer.selectedEntity;
+            if (Cesium.defined(selectedEntity)) {
+                updateSelectedPlanetInfo(selectedEntity);
+            }
+        });
+
+        viewer.selectedEntityChanged.addEventListener(function (entity) {
+            updateSelectedPlanetInfo(entity);
+        });
+
+
+    </script>
+</body>
+
+</html>
