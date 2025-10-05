@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Celestia Project Setup Guide</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for a clean, modern look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+
+        /* Comparison-specific styles */
+        .comparison-container {
+            display: flex;
+            width: 100vw;
+            height: calc(100vh - 140px);
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+
+        .back-button {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(52, 73, 94, 0.3);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 73, 94, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Deep Space background */
+            background-color: #0d0d12;
+            /* Prevent vertical scrollbar jitter when content is short */
+            min-height: 100vh;
+        }
+
+        /* Custom scrollbar for galactic look (Webkit) */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+            /* Dark track */
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #a78bfa;
+            /* Light purple thumb */
+            border-radius: 4px;
+        }
+
+        /* Galactic Glow for Accent Elements */
+        .galactic-glow {
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.7);
+            /* Purple glow */
+            transition: all 0.3s ease-in-out;
+        }
+
+        .galactic-glow:hover {
+            box-shadow: 0 0 25px rgba(192, 132, 252, 0.9);
+        }
+    </style>
+</head>
+
+<body class="text-white flex flex-col items-center justify-center py-8 px-4 my-14">
+
+    <div class="max-w-4xl w-full bg-[#161625] border border-purple-600 rounded-xl p-6 sm:p-10 galactic-glow">
+        <div class="top-bar">
+            <button class="back-button" onclick="window.location.href='../index.html'">
+                ← Back to Single Viewer
+            </button>
+            <h1 class="page-title"></h1>
+            <div style="width: 200px;"></div> <!-- Spacer for centering -->
+        </div>
+        
+        <!-- Header Section -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-purple-400 mb-2">
+                Celestia Project Guide 🌌
+            </h1>
+            <p class="text-lg text-gray-300">Your journey into the cosmos starts here.</p>
+        </header>
+
+        <!-- Step-by-Step Instructions Container -->
+        <div class="space-y-12">
+
+            <!-- STEP 1: Celestia Web App Instructions -->
+            <section class="p-6 bg-[#1f1f32] rounded-lg border-l-4 border-purple-500 shadow-xl">
+                <div class="flex items-center mb-4">
+                    <span class="text-3xl font-bold mr-4 text-purple-400">1.</span>
+                    <h2 class="text-2xl font-semibold text-white">Access the Celestia Web App</h2>
+                </div>
+                <p class="text-gray-400 mb-6">
+                    The Celestia Web App is our live, interactive planet and system explorer. You can access it directly
+                    to begin visualizing the orbital mechanics and data.
+                </p>
+
+                <p class="text-gray-400 mb-6 italic">
+                    Note: The web app is best experienced on desktop devices or modern tablets.
+                </p>
+
+                <a href="https://celestiaproject.space/download.html" target="_blank"
+                    class="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 focus:ring-offset-[#161625] transition duration-150 ease-in-out galactic-glow">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                    Launch Celestia Live
+                </a>
+            </section>
+
+            <section class="p-6 bg-[#1f1f32] rounded-lg border-l-4 border-purple-500 shadow-xl">
+                <div class="flex items-center mb-4">
+                    <span class="text-3xl font-bold mr-4 text-purple-400">2.</span>
+                    <h2 class="text-2xl font-semibold text-white">Download the Full Project Script (ZIP)</h2>
+                </div>
+                <p class="text-gray-400 mb-4">
+                    To explore the code, modify the application, or run it locally, download the complete script bundle.
+                    This ZIP file includes all the files required to run the project on your own system.
+                    <br><br>
+                    After downloading, extract the ZIP and move its contents to Celestia’s <strong>extras</strong>
+                    folder:
+                <ul class="list-disc pl-6 mt-2">
+                    <li><strong>Windows:</strong> <code>C:\Program Files\Celestia\extras\</code></li>
+                    <li><strong>Ubuntu:</strong> <code>/usr/share/celestia/extras/</code></li>
+                    <li><strong>macOS:</strong>
+                        <code>Applications/Celestia.app/Contents/Resources/CelestiaResources/extras-standard/</code>
+                    </li>
+                </ul>
+                </p>
+
+                <a href="https://example.com/celestia-project-script.zip" download
+                    class="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 focus:ring-offset-[#161625] transition duration-150 ease-in-out galactic-glow">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Download Project ZIP
+                </a>
+            </section>
+
+        </div>
+
+    </div>
+</body>
+
+</html>
