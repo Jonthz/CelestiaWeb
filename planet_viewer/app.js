@@ -62,21 +62,21 @@ async function loadPlanetData() {
     try {
         // Try loading KOI data first (most comprehensive)
         updateLoadingText("Fetching KOI candidate data...");
-        const response = await fetch('../koiData.json');
+        const response = await fetch('./koiData.json');
         planets = await response.json();
         console.log(`✅ Loaded ${planets.length} KOI planets`);
         updateLoadingText(`Successfully loaded ${planets.length} KOI candidates!`);
     } catch (error) {
         console.error('Error loading KOI data, trying Kepler data:', error);
         try {
-            const response = await fetch('../keplerData.json');
+            const response = await fetch('./keplerData.json');
             planets = await response.json();
             console.log(`Loaded ${planets.length} Kepler planets`);
         } catch (keplerError) {
             console.error('Error loading Kepler data, falling back to original:', keplerError);
             // Fallback to original data
             try {
-                const fallbackResponse = await fetch('../exoplanetData.json');
+                const fallbackResponse = await fetch('./exoplanetData.json');
                 const fallbackData = await fallbackResponse.json();
                 // Convert old format to new format
                 planets = fallbackData.map((planet, index) => ({
