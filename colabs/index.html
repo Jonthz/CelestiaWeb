@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Models - Cosmo View</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 50%, #2d1b69 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 4s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            max-width: 1000px;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(0, 245, 255, 0.5);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .back-button:hover {
+            background: rgba(0, 245, 255, 0.2);
+            border-color: #00f5ff;
+            transform: translateY(-2px);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #f4b400, #ff9800);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            color: #b8b8ff;
+            opacity: 0.8;
+        }
+
+        .colab-options {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .colab-card {
+            background: linear-gradient(135deg, rgba(244, 180, 0, 0.15), rgba(255, 152, 0, 0.1));
+            border: 2px solid rgba(244, 180, 0, 0.5);
+            border-radius: 15px;
+            padding: 2.5rem;
+            width: 380px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .colab-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(244, 180, 0, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .colab-card:hover::before {
+            left: 100%;
+        }
+
+        .colab-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: #f4b400;
+            box-shadow: 0 20px 40px rgba(244, 180, 0, 0.4);
+        }
+
+        .colab-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .colab-title {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #f4b400;
+            font-weight: bold;
+        }
+
+        .colab-description {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #d4d4ff;
+            margin-bottom: 1.5rem;
+        }
+
+        .colab-badge {
+            display: inline-block;
+            background: rgba(244, 180, 0, 0.2);
+            border: 1px solid #f4b400;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #f4b400;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+
+        .features {
+            text-align: left;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(244, 180, 0, 0.3);
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            color: #b8b8ff;
+        }
+
+        .feature-icon {
+            color: #f4b400;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .colab-options {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .colab-card {
+                width: 320px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="stars"></div>
+
+    <a href="../" class="back-button">← Back to Home</a>
+
+    <div class="container">
+        <h1>🔬 Machine Learning Models</h1>
+        <p class="subtitle">Explore our neural networks for exoplanet detection</p>
+
+        <div class="colab-options">
+            <a href="https://colab.research.google.com/github/jojusuar/exoplanets/blob/main/kepler_notebook.ipynb" target="_blank" class="colab-card">
+                <span class="colab-icon">🪐</span>
+                <h3 class="colab-title">Kepler ML Model</h3>
+                <p class="colab-description">
+                    Deep learning model trained on NASA's Kepler mission data to detect exoplanets
+                    from light curve analysis.
+                </p>
+                <div class="features">
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <span>Train on real Kepler data</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <span>Neural network visualization</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <span>Interactive predictions</span>
+                    </div>
+                </div>
+                <span class="colab-badge">Open in Google Colab →</span>
+            </a>
+
+            <a href="https://colab.research.google.com/github/jojusuar/exoplanets/blob/main/tess_notebook.ipynb" target="_blank" class="colab-card">
+                <span class="colab-icon">🔭</span>
+                <h3 class="colab-title">TESS ML Model</h3>
+                <p class="colab-description">
+                    Advanced neural network designed for TESS mission data, detecting transit
+                    signals with high precision.
+                </p>
+                <div class="features">
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <span>TESS light curve analysis</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <span>Transit signal detection</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        <span>Real-time training</span>
+                    </div>
+                </div>
+                <span class="colab-badge">Open in Google Colab →</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function createStars() {
+            const starsContainer = document.querySelector('.stars');
+            const starCount = 150;
+
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+
+                const size = Math.random() * 3 + 1;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 4 + 's';
+                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+
+                starsContainer.appendChild(star);
+            }
+        }
+
+        createStars();
+    </script>
+</body>
+
+</html>
