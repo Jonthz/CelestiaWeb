@@ -1,11 +1,56 @@
 {
   "version": 2,
   "public": true,
-  "buildCommand": null,
-  "devCommand": null,
-  "installCommand": null,
-  "framework": null,
-  "outputDirectory": ".",
+  "routes": [
+    {
+      "src": "/planet_viewer",
+      "dest": "/planet_viewer/index.html"
+    },
+    {
+      "src": "/planet_viewer/(.*)",
+      "dest": "/planet_viewer/$1"
+    },
+    {
+      "src": "/solar_view",
+      "dest": "/solar_view/index.html"
+    },
+    {
+      "src": "/solar_view/(.*)",
+      "dest": "/solar_view/$1"
+    },
+    {
+      "src": "/(.*\\.(css|js|json|ssc|html))",
+      "dest": "/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.(js|css|json))",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/javascript; charset=utf-8"
+        }
+      ]
+    }
+  ],
   "cleanUrls": true,
   "trailingSlash": false
 }
