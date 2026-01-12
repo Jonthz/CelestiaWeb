@@ -3,6 +3,8 @@ let scene, camera, renderer, controls;
 let exoplanets = [];
 let exoplanetData = [];
 let raycaster, mouse;
+// Initialize Broadcast Channel
+const aiChannel = new BroadcastChannel('celestia_ai_channel');
 let habitableZoneVisible = true;
 let habitableZoneObjects = [];
 let currentSystem = 'overview';
@@ -55,7 +57,7 @@ async function loadExoplanetData() {
 // Group planets by star system
 function groupPlanetsBySystem() {
     starSystems = {};
-    
+
     exoplanetData.forEach(planet => {
         const systemName = planet.system;
         if (!starSystems[systemName]) {
@@ -67,17 +69,17 @@ function groupPlanetsBySystem() {
         }
         starSystems[systemName].planets.push(planet);
     });
-    
+
     console.log('Star systems:', starSystems);
 }
 
 // Populate system selector dropdown
 function populateSystemSelector() {
     const selector = document.getElementById('system-select');
-    
+
     // Clear existing options except overview
     selector.innerHTML = '<option value="overview">🌌 Galaxy Overview</option>';
-    
+
     // Add each star system
     Object.keys(starSystems).forEach(systemName => {
         const option = document.createElement('option');
@@ -85,7 +87,7 @@ function populateSystemSelector() {
         option.textContent = `⭐ ${systemName} (${starSystems[systemName].planets.length} planets)`;
         selector.appendChild(option);
     });
-    
+
     // Add event listener
     selector.addEventListener('change', (e) => {
         showSystem(e.target.value);
@@ -95,11 +97,11 @@ function populateSystemSelector() {
 // Set up the Three.js scene
 function setupScene() {
     scene = new THREE.Scene();
-    
+
     // Add starfield background
     const starGeometry = new THREE.BufferGeometry();
     const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 2 });
-    
+
     const starVertices = [];
     for (let i = 0; i < 10000; i++) {
         const x = (Math.random() - 0.5) * 2000;
@@ -107,7 +109,7 @@ function setupScene() {
         const z = (Math.random() - 0.5) * 2000;
         starVertices.push(x, y, z);
     }
-    
+
     starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
     const stars = new THREE.Points(starGeometry, starMaterial);
     scene.add(stars);
@@ -125,7 +127,7 @@ function setupRenderer() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000011);
     document.getElementById('scene-container').appendChild(renderer.domElement);
-    
+
     // Handle window resize
     window.addEventListener('resize', onWindowResize, false);
 }
@@ -135,7 +137,7 @@ function setupLighting() {
     // Ambient light
     const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
     scene.add(ambientLight);
-    
+
     // Point light (will be positioned at star when in system view)
     const pointLight = new THREE.PointLight(0xffffff, 1, 0);
     pointLight.position.set(0, 0, 0);
@@ -147,38 +149,38 @@ function createHabitableZone() {
     // Inner boundary of habitable zone
     const innerRadius = 45;
     const outerRadius = 85;
-    
+
     // Create ring geometry for habitable zone
     const habitableZoneGeometry = new THREE.RingGeometry(innerRadius, outerRadius, 64);
-    const habitableZoneMaterial = new THREE.MeshBasicMaterial({ 
+    const habitableZoneMaterial = new THREE.MeshBasicMaterial({
         color: 0x00ff88,
         side: THREE.DoubleSide,
         transparent: true,
         opacity: 0.15
     });
-    
+
     const habitableZone = new THREE.Mesh(habitableZoneGeometry, habitableZoneMaterial);
     habitableZone.rotation.x = Math.PI / 2;
     scene.add(habitableZone);
     habitableZoneObjects.push(habitableZone);
-    
+
     // Add inner and outer boundary rings
     const innerBoundary = new THREE.RingGeometry(innerRadius - 1, innerRadius + 1, 64);
     const outerBoundary = new THREE.RingGeometry(outerRadius - 1, outerRadius + 1, 64);
-    
-    const boundaryMaterial = new THREE.MeshBasicMaterial({ 
+
+    const boundaryMaterial = new THREE.MeshBasicMaterial({
         color: 0x00ff88,
         side: THREE.DoubleSide,
         transparent: true,
         opacity: 0.6
     });
-    
+
     const innerRing = new THREE.Mesh(innerBoundary, boundaryMaterial);
     const outerRing = new THREE.Mesh(outerBoundary, boundaryMaterial);
-    
+
     innerRing.rotation.x = Math.PI / 2;
     outerRing.rotation.x = Math.PI / 2;
-    
+
     scene.add(innerRing);
     scene.add(outerRing);
     habitableZoneObjects.push(innerRing, outerRing);
@@ -188,11 +190,11 @@ function createHabitableZone() {
 function createAtmosphere(planetRadius, planetType) {
     const atmosphereRadius = planetRadius * 1.2;
     const atmosphereGeometry = new THREE.SphereGeometry(atmosphereRadius, 32, 32);
-    
+
     let atmosphereColor, opacity;
-    
+
     // Determine atmosphere properties based on planet type
-    switch(planetType) {
+    switch (planetType) {
         case 'Super-Earth':
         case 'Rocky':
             atmosphereColor = 0x87ceeb; // Sky blue
@@ -216,14 +218,14 @@ function createAtmosphere(planetRadius, planetType) {
             atmosphereColor = 0xffffff; // White
             opacity = 0.2;
     }
-    
+
     const atmosphereMaterial = new THREE.MeshLambertMaterial({
         color: atmosphereColor,
         transparent: true,
         opacity: opacity,
         side: THREE.BackSide
     });
-    
+
     const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
     return atmosphere;
 }
@@ -242,48 +244,48 @@ function setupControls() {
 function setupInteraction() {
     raycaster = new THREE.Raycaster();
     mouse = new THREE.Vector2();
-    
+
     renderer.domElement.addEventListener('click', onMouseClick, false);
-    
+
     // Close info panel button
     document.getElementById('close-info').addEventListener('click', () => {
         document.getElementById('info-panel').classList.add('hidden');
     });
-    
+
     // Add planet button
     document.getElementById('add-planet-btn').addEventListener('click', addRandomPlanet);
-    
+
     // Size comparison button
     document.getElementById('comparison-mode-btn').addEventListener('click', showSizeComparison);
     document.getElementById('close-comparison').addEventListener('click', () => {
         document.getElementById('comparison-panel').classList.add('hidden');
     });
-    
+
     // Habitable zone toggle
     document.getElementById('habitable-zone-btn').addEventListener('click', toggleHabitableZone);
-    
+
     // Timeline button
     document.getElementById('timeline-btn').addEventListener('click', showTimeline);
     document.getElementById('close-timeline').addEventListener('click', () => {
         document.getElementById('timeline-panel').classList.add('hidden');
     });
-    
+
     // Planet filter
     document.getElementById('planet-filter').addEventListener('change', filterPlanets);
-    
+
     // Mission and status filters
     document.getElementById('mission-filter').addEventListener('change', filterPlanets);
     document.getElementById('status-filter').addEventListener('change', filterPlanets);
-    
+
     // Reset view button
     document.getElementById('reset-view-btn').addEventListener('click', resetSystemView);
-    
+
     // Education mode button
     document.getElementById('education-mode-btn').addEventListener('click', showEducationMode);
     document.getElementById('close-education').addEventListener('click', () => {
         document.getElementById('education-panel').classList.add('hidden');
     });
-    
+
     // Education tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -298,31 +300,31 @@ function generateRandomTexture() {
     canvas.width = 128;
     canvas.height = 128;
     const context = canvas.getContext('2d');
-    
+
     // Generate random base color
     const baseHue = Math.random() * 360;
     const baseColor = `hsl(${baseHue}, 70%, 50%)`;
     const accentColor = `hsl(${(baseHue + 60) % 360}, 60%, 40%)`;
-    
+
     // Fill base color
     context.fillStyle = baseColor;
     context.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     // Add some simple patterns
     context.fillStyle = accentColor;
     context.globalAlpha = 0.3;
-    
+
     // Add random circles for surface features
     for (let i = 0; i < 15; i++) {
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height;
         const radius = Math.random() * 20 + 5;
-        
+
         context.beginPath();
         context.arc(x, y, radius, 0, Math.PI * 2);
         context.fill();
     }
-    
+
     // Add some stripes for gas giants
     if (Math.random() > 0.6) {
         context.globalAlpha = 0.2;
@@ -330,7 +332,7 @@ function generateRandomTexture() {
             context.fillRect(0, i, canvas.width, 4);
         }
     }
-    
+
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
@@ -342,18 +344,18 @@ function generateRandomTexture() {
 function showSystem(systemName) {
     // Clear current scene
     clearScene();
-    
+
     currentSystem = systemName;
-    
+
     if (systemName === 'overview') {
         createGalaxyOverview();
     } else {
         createStarSystem(systemName);
     }
-    
+
     // Update camera position
     resetCamera();
-    
+
     // Update UI context
     updateUIContext();
 }
@@ -362,7 +364,7 @@ function showSystem(systemName) {
 function clearScene() {
     // Stop following any planet
     followingPlanet = null;
-    
+
     // Remove all exoplanets
     exoplanets.forEach(planet => {
         scene.remove(planet);
@@ -371,13 +373,13 @@ function clearScene() {
         }
     });
     exoplanets = [];
-    
+
     // Remove habitable zone objects
     habitableZoneObjects.forEach(obj => {
         scene.remove(obj);
     });
     habitableZoneObjects = [];
-    
+
     // Remove current star
     if (currentStar) {
         scene.remove(currentStar);
@@ -389,33 +391,33 @@ function clearScene() {
 function createGalaxyOverview() {
     Object.keys(starSystems).forEach((systemName, index) => {
         const system = starSystems[systemName];
-        
+
         // Create a distant star representing the system
         const angle = (index / Object.keys(starSystems).length) * Math.PI * 2;
         const distance = 100 + (index * 50);
         const x = Math.cos(angle) * distance;
         const z = Math.sin(angle) * distance;
         const y = (Math.random() - 0.5) * 50;
-        
+
         const starGeometry = new THREE.SphereGeometry(3, 16, 16);
-        const starMaterial = new THREE.MeshBasicMaterial({ 
+        const starMaterial = new THREE.MeshBasicMaterial({
             color: 0xffaa44,
             emissive: 0xffaa44,
             emissiveIntensity: 0.3
         });
-        
+
         const systemStar = new THREE.Mesh(starGeometry, starMaterial);
         systemStar.position.set(x, y, z);
-        systemStar.userData = { 
+        systemStar.userData = {
             type: 'system',
             systemName: systemName,
             planetCount: system.planets.length,
             distance: system.distance
         };
-        
+
         scene.add(systemStar);
         exoplanets.push(systemStar); // Add to exoplanets for interaction
-        
+
         // Add system label
         createSystemLabel(systemName, x, y + 10, z);
     });
@@ -425,13 +427,13 @@ function createGalaxyOverview() {
 function createStarSystem(systemName) {
     const system = starSystems[systemName];
     if (!system) return;
-    
+
     // Create central star
     createCentralStar();
-    
+
     // Create habitable zone
     createHabitableZone();
-    
+
     // Create planets in this system
     system.planets.forEach((planet, index) => {
         createPlanetInSystem(planet, index, system.planets.length);
@@ -441,12 +443,12 @@ function createStarSystem(systemName) {
 // Create central star for individual system view
 function createCentralStar() {
     const starGeometry = new THREE.SphereGeometry(8, 32, 32);
-    const starMaterial = new THREE.MeshBasicMaterial({ 
+    const starMaterial = new THREE.MeshBasicMaterial({
         color: 0xffff00,
         emissive: 0xffff00,
         emissiveIntensity: 0.6
     });
-    
+
     currentStar = new THREE.Mesh(starGeometry, starMaterial);
     currentStar.position.set(0, 0, 0);
     scene.add(currentStar);
@@ -456,7 +458,7 @@ function createCentralStar() {
 function createPlanetInSystem(planet, index, totalPlanets) {
     // Calculate orbital position with better spacing for more planets
     const angle = (index / totalPlanets) * Math.PI * 2;
-    
+
     // Dynamic distance calculation based on number of planets
     let baseDistance = 20;
     let distanceIncrement = totalPlanets > 5 ? 15 : 20;
@@ -464,28 +466,28 @@ function createPlanetInSystem(planet, index, totalPlanets) {
         baseDistance = 15;
         distanceIncrement = 12;
     }
-    
+
     const distance = baseDistance + (index * distanceIncrement);
     const x = Math.cos(angle) * distance;
     const z = Math.sin(angle) * distance;
     const y = (Math.random() - 0.5) * 3; // Even less vertical spread for crowded systems
-    
+
     // Determine planet size based on type
     let radius = 1;
     if (planet.type.includes('Jupiter')) radius = 4;
     else if (planet.type.includes('Super-Earth')) radius = 1.8;
     else if (planet.type.includes('Sub-Neptune')) radius = 2.5;
     else if (planet.type === 'Ocean World') radius = 1.3;
-    
+
     // Create planet geometry and material
     const geometry = new THREE.SphereGeometry(radius, 32, 32);
     const texture = generateRandomTexture();
     const material = new THREE.MeshLambertMaterial({ map: texture });
-    
+
     const exoplanet = new THREE.Mesh(geometry, material);
     exoplanet.position.set(x, y, z);
     exoplanet.userData = planet;
-    
+
     // Add atmosphere effect for certain planet types
     if (planet.type.includes('Earth') || planet.type === 'Ocean World' || planet.type.includes('Jupiter')) {
         const atmosphere = createAtmosphere(radius, planet.type);
@@ -493,13 +495,13 @@ function createPlanetInSystem(planet, index, totalPlanets) {
         scene.add(atmosphere);
         exoplanet.userData.atmosphere = atmosphere;
     }
-    
+
     scene.add(exoplanet);
     exoplanets.push(exoplanet);
-    
+
     // Add orbital path
     const orbitGeometry = new THREE.RingGeometry(distance - 0.5, distance + 0.5, 64);
-    const orbitMaterial = new THREE.MeshBasicMaterial({ 
+    const orbitMaterial = new THREE.MeshBasicMaterial({
         color: planet.inHabitableZone ? 0x00ff88 : 0x444444,
         side: THREE.DoubleSide,
         transparent: true,
@@ -537,22 +539,22 @@ function createExoplanets() {
         const x = Math.cos(angle) * distance;
         const z = Math.sin(angle) * distance;
         const y = (Math.random() - 0.5) * 10; // Random vertical offset
-        
+
         // Determine planet size based on type
         let radius = 1;
         if (planet.type.includes('Jupiter')) radius = 3;
         else if (planet.type.includes('Super-Earth')) radius = 1.5;
         else if (planet.type.includes('Sub-Neptune')) radius = 2;
-        
+
         // Create planet geometry and material
         const geometry = new THREE.SphereGeometry(radius, 32, 32);
         const texture = generateRandomTexture();
         const material = new THREE.MeshLambertMaterial({ map: texture });
-        
+
         const exoplanet = new THREE.Mesh(geometry, material);
         exoplanet.position.set(x, y, z);
         exoplanet.userData = planet; // Store planet data
-        
+
         // Add atmosphere effect for certain planet types
         if (planet.type.includes('Earth') || planet.type === 'Ocean World' || planet.type.includes('Jupiter')) {
             const atmosphere = createAtmosphere(radius, planet.type);
@@ -560,14 +562,14 @@ function createExoplanets() {
             scene.add(atmosphere);
             exoplanet.userData.atmosphere = atmosphere;
         }
-        
+
         scene.add(exoplanet);
         exoplanets.push(exoplanet);
-        
+
         // Add orbital path
         const orbitGeometry = new THREE.RingGeometry(distance - 0.5, distance + 0.5, 64);
-        const orbitMaterial = new THREE.MeshBasicMaterial({ 
-            color: 0x444444, 
+        const orbitMaterial = new THREE.MeshBasicMaterial({
+            color: 0x444444,
             side: THREE.DoubleSide,
             transparent: true,
             opacity: 0.2
@@ -582,21 +584,21 @@ function createExoplanets() {
 function onMouseClick(event) {
     // Don't handle clicks if camera is animating
     if (cameraAnimating) return;
-    
+
     // Calculate mouse position in normalized device coordinates
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    
+
     // Update the picking ray with the camera and mouse position
     raycaster.setFromCamera(mouse, camera);
-    
+
     // Calculate objects intersecting the picking ray
     const intersects = raycaster.intersectObjects(exoplanets);
-    
+
     if (intersects.length > 0) {
         const selectedObject = intersects[0].object;
         const userData = selectedObject.userData;
-        
+
         if (userData.type === 'system') {
             // If in galaxy overview and clicked on a system, switch to that system
             if (currentSystem === 'overview') {
@@ -617,24 +619,24 @@ function showPlanetInfo(planetData) {
     document.getElementById('planet-distance').textContent = planetData.distance;
     document.getElementById('planet-type').textContent = planetData.type;
     document.getElementById('planet-system').textContent = planetData.system || 'Unknown';
-    
+
     // Mission data
     document.getElementById('planet-mission').textContent = planetData.mission || 'Unknown';
     document.getElementById('planet-status').textContent = getStatusDisplay(planetData.status);
-    document.getElementById('planet-confidence').textContent = planetData.confidence ? 
+    document.getElementById('planet-confidence').textContent = planetData.confidence ?
         `${(planetData.confidence * 100).toFixed(1)}%` : 'N/A';
-    
+
     // Transit data
     document.getElementById('planet-period').textContent = planetData.orbitalPeriod || 'N/A';
-    document.getElementById('planet-depth').textContent = planetData.transitDepth ? 
+    document.getElementById('planet-depth').textContent = planetData.transitDepth ?
         planetData.transitDepth.toExponential(2) : 'N/A';
     document.getElementById('planet-duration').textContent = planetData.transitDuration || 'N/A';
-    
+
     // Color-code status
     const statusSpan = document.getElementById('planet-status');
     const confidenceSpan = document.getElementById('planet-confidence');
-    
-    switch(planetData.status) {
+
+    switch (planetData.status) {
         case 'confirmed':
             statusSpan.style.color = '#2ecc71';
             break;
@@ -647,7 +649,7 @@ function showPlanetInfo(planetData) {
         default:
             statusSpan.style.color = '#cccccc';
     }
-    
+
     // Color-code confidence
     if (planetData.confidence) {
         if (planetData.confidence > 0.9) {
@@ -658,13 +660,31 @@ function showPlanetInfo(planetData) {
             confidenceSpan.style.color = '#e74c3c';
         }
     }
-    
+
+    // Broadcast to AI Dashboard
+    if (aiChannel) {
+        console.log("📡 app.js: Broadcasting planet data to AI...", planetData.name);
+        aiChannel.postMessage({
+            type: 'planet_selected',
+            data: {
+                id: planetData.id || planetData.name, // Use name if ID missing
+                name: planetData.name,
+                system: planetData.system,
+                radius: planetData.radius,
+                distance: planetData.distance,
+                discoveryYear: planetData.discoveryYear,
+                temperature: planetData.temperature,
+                status: planetData.status
+            }
+        });
+    }
+
     document.getElementById('info-panel').classList.remove('hidden');
 }
 
 // Get display text for status
 function getStatusDisplay(status) {
-    switch(status) {
+    switch (status) {
         case 'confirmed': return '✅ Confirmed';
         case 'candidate': return '🤔 Candidate';
         case 'false_positive': return '❌ False Positive';
@@ -675,58 +695,58 @@ function getStatusDisplay(status) {
 // Center camera on selected planet with smooth animation
 function centerCameraOnPlanet(planet) {
     if (cameraAnimating) return;
-    
+
     cameraAnimating = true;
-    
+
     // Calculate target position (closer to the planet)
     const planetPosition = planet.position.clone();
     const planetRadius = planet.geometry.parameters.radius;
-    
+
     // Calculate camera position (distance based on planet size)
     const distance = Math.max(planetRadius * 8, 15);
     const targetPosition = planetPosition.clone();
     targetPosition.add(new THREE.Vector3(distance, distance * 0.5, distance));
-    
+
     // Store initial camera and controls state
     const startPosition = camera.position.clone();
     const startTarget = controls.target.clone();
-    
+
     // Animation parameters
     const duration = 1500; // 1.5 seconds
     const startTime = Date.now();
-    
+
     function animateCamera() {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
+
         // Use easing function for smooth animation
         const easeProgress = easeInOutCubic(progress);
-        
+
         // Interpolate camera position
         camera.position.lerpVectors(startPosition, targetPosition, easeProgress);
-        
+
         // Interpolate controls target
         controls.target.lerpVectors(startTarget, planetPosition, easeProgress);
         controls.update();
-        
+
         if (progress < 1) {
             animationId = requestAnimationFrame(animateCamera);
         } else {
             // Animation complete
             cameraAnimating = false;
             animationId = null;
-            
+
             // Set up planet following
             followingPlanet = planet;
             cameraOffset.copy(targetPosition).sub(planetPosition);
-            
+
             // Show reset view button
             if (currentSystem !== 'overview') {
                 document.getElementById('reset-view-btn').classList.remove('hidden');
             }
         }
     }
-    
+
     // Start animation
     animateCamera();
 }
@@ -746,17 +766,17 @@ function onWindowResize() {
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
-    
+
     // Rotate exoplanets around their axis
     exoplanets.forEach((planet, index) => {
         planet.rotation.y += 0.01;
-        
+
         // Add orbital motion only in individual system view
         if (currentSystem !== 'overview' && planet.userData.type !== 'system') {
             const time = Date.now() * 0.001;
             const systemPlanets = starSystems[currentSystem] ? starSystems[currentSystem].planets : [];
             const planetIndex = systemPlanets.findIndex(p => p.name === planet.userData.name);
-            
+
             if (planetIndex !== -1) {
                 let baseDistance = 20;
                 let distanceIncrement = systemPlanets.length > 5 ? 15 : 20;
@@ -764,14 +784,14 @@ function animate() {
                     baseDistance = 15;
                     distanceIncrement = 12;
                 }
-                
+
                 const distance = baseDistance + (planetIndex * distanceIncrement);
                 const speed = 0.3 / (distance * 0.1); // Slower for distant planets
                 const angle = time * speed + (planetIndex / systemPlanets.length) * Math.PI * 2;
-                
+
                 planet.position.x = Math.cos(angle) * distance;
                 planet.position.z = Math.sin(angle) * distance;
-                
+
                 // Update atmosphere position if it exists
                 if (planet.userData.atmosphere) {
                     planet.userData.atmosphere.position.copy(planet.position);
@@ -779,16 +799,16 @@ function animate() {
             }
         }
     });
-    
+
     // Update camera to follow planet if following mode is active
     if (followingPlanet && !cameraAnimating) {
         const planetPosition = followingPlanet.position.clone();
         const newCameraPosition = planetPosition.clone().add(cameraOffset);
-        
+
         camera.position.copy(newCameraPosition);
         controls.target.copy(planetPosition);
     }
-    
+
     controls.update();
     renderer.render(scene, camera);
 }
@@ -801,12 +821,12 @@ function generateRandomPlanetData() {
         "Quantum Sphere", "Celestial Harbor", "Binary Dawn", "Photon Valley", "Cosmic Tide",
         "Solar Winds", "Astral Peak", "Gravity Well", "Dark Matter", "Light Speed"
     ];
-    
+
     const planetTypes = ["Rocky", "Super-Earth", "Sub-Neptune", "Hot Jupiter", "Gas Giant", "Ice Giant", "Ocean World"];
-    
+
     const randomName = planetNames[Math.floor(Math.random() * planetNames.length)] + "-" + (Math.floor(Math.random() * 999) + 1);
     const randomType = planetTypes[Math.floor(Math.random() * planetTypes.length)];
-    
+
     // Generate random mass based on type
     let mass;
     if (randomType.includes('Jupiter') || randomType === 'Gas Giant') {
@@ -814,10 +834,10 @@ function generateRandomPlanetData() {
     } else {
         mass = (Math.random() * 8 + 0.5).toFixed(2) + " Earths";
     }
-    
+
     // Generate random distance
     const distance = (Math.random() * 1000 + 10).toFixed(1) + " light-years";
-    
+
     return {
         name: randomName,
         mass: mass,
@@ -829,7 +849,7 @@ function generateRandomPlanetData() {
 // Add a new random planet to the scene
 function addRandomPlanet() {
     const newPlanet = generateRandomPlanetData();
-    
+
     // Calculate orbital position for new planet
     const currentPlanetCount = exoplanets.length;
     const angle = Math.random() * Math.PI * 2; // Random angle
@@ -837,7 +857,7 @@ function addRandomPlanet() {
     const x = Math.cos(angle) * distance;
     const z = Math.sin(angle) * distance;
     const y = (Math.random() - 0.5) * 15; // Random vertical offset
-    
+
     // Determine planet size based on type
     let radius = 1;
     if (newPlanet.type.includes('Jupiter') || newPlanet.type === 'Gas Giant') radius = 3 + Math.random();
@@ -845,23 +865,23 @@ function addRandomPlanet() {
     else if (newPlanet.type.includes('Sub-Neptune') || newPlanet.type === 'Ice Giant') radius = 2 + Math.random() * 0.5;
     else if (newPlanet.type === 'Ocean World') radius = 1.2 + Math.random() * 0.3;
     else radius = 0.8 + Math.random() * 0.4; // Rocky planets
-    
+
     // Create planet geometry and material
     const geometry = new THREE.SphereGeometry(radius, 32, 32);
     const texture = generateRandomTexture();
     const material = new THREE.MeshLambertMaterial({ map: texture });
-    
+
     const exoplanet = new THREE.Mesh(geometry, material);
     exoplanet.position.set(x, y, z);
     exoplanet.userData = newPlanet; // Store planet data
-    
+
     scene.add(exoplanet);
     exoplanets.push(exoplanet);
-    
+
     // Add orbital path
     const orbitGeometry = new THREE.RingGeometry(distance - 0.5, distance + 0.5, 64);
-    const orbitMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0x444444, 
+    const orbitMaterial = new THREE.MeshBasicMaterial({
+        color: 0x444444,
         side: THREE.DoubleSide,
         transparent: true,
         opacity: 0.2
@@ -869,10 +889,10 @@ function addRandomPlanet() {
     const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
     orbit.rotation.x = Math.PI / 2;
     scene.add(orbit);
-    
+
     // Show success message (optional)
     console.log(`Added new planet: ${newPlanet.name} (${newPlanet.type})`);
-    
+
     // Briefly highlight the new planet
     const originalEmissive = material.emissive.clone();
     material.emissive.setHex(0x00ff00);
@@ -885,29 +905,29 @@ function addRandomPlanet() {
 function showSizeComparison() {
     const comparisonDisplay = document.getElementById('comparison-display');
     comparisonDisplay.innerHTML = '';
-    
+
     // Add Earth reference
     const earthItem = createComparisonItem('Earth', 1.0, '#4a90e2');
     comparisonDisplay.appendChild(earthItem);
-    
+
     // Add all exoplanets
     exoplanets.forEach(planet => {
         const planetData = planet.userData;
         let earthRadii = 1.0;
-        
+
         // Calculate relative size based on mass and type
         if (planetData.mass.includes('Jupiters')) {
             const mass = parseFloat(planetData.mass);
             earthRadii = mass * 11.2; // Jupiter is ~11.2 Earth radii
         } else if (planetData.mass.includes('Earths')) {
             const mass = parseFloat(planetData.mass);
-            earthRadii = Math.pow(mass, 1/3); // Rough approximation
+            earthRadii = Math.pow(mass, 1 / 3); // Rough approximation
         }
-        
+
         const item = createComparisonItem(planetData.name, earthRadii, '#00d4ff');
         comparisonDisplay.appendChild(item);
     });
-    
+
     document.getElementById('comparison-panel').classList.remove('hidden');
 }
 
@@ -915,10 +935,10 @@ function showSizeComparison() {
 function createComparisonItem(name, earthRadii, color) {
     const item = document.createElement('div');
     item.className = 'planet-comparison-item';
-    
+
     const maxSize = 50; // Maximum circle size in pixels
     const circleSize = Math.min(maxSize, Math.max(8, earthRadii * 15));
-    
+
     item.innerHTML = `
         <h4>${name}</h4>
         <div class="size-indicator">
@@ -926,18 +946,18 @@ function createComparisonItem(name, earthRadii, color) {
         </div>
         <div class="size-text">${earthRadii.toFixed(2)}x Earth</div>
     `;
-    
+
     return item;
 }
 
 // Toggle habitable zone visibility
 function toggleHabitableZone() {
     habitableZoneVisible = !habitableZoneVisible;
-    
+
     habitableZoneObjects.forEach(obj => {
         obj.visible = habitableZoneVisible;
     });
-    
+
     const button = document.getElementById('habitable-zone-btn');
     button.textContent = habitableZoneVisible ? '🌱 Hide Habitable Zone' : '🌱 Show Habitable Zone';
 }
@@ -946,7 +966,7 @@ function toggleHabitableZone() {
 function showTimeline() {
     const timelineDisplay = document.getElementById('timeline-display');
     timelineDisplay.innerHTML = '';
-    
+
     // Combine original data and current exoplanets
     const allPlanets = [...exoplanetData];
     exoplanets.forEach(planet => {
@@ -954,16 +974,16 @@ function showTimeline() {
             allPlanets.push(planet.userData);
         }
     });
-    
+
     // Sort by discovery year
     const sortedPlanets = allPlanets
         .filter(planet => planet.discoveryYear)
         .sort((a, b) => a.discoveryYear - b.discoveryYear);
-    
+
     sortedPlanets.forEach(planet => {
         const timelineItem = document.createElement('div');
         timelineItem.className = 'timeline-item';
-        
+
         timelineItem.innerHTML = `
             <div class="timeline-year">${planet.discoveryYear}</div>
             <div class="timeline-planet">
@@ -971,10 +991,10 @@ function showTimeline() {
                 <div>${planet.type} in ${planet.system}</div>
             </div>
         `;
-        
+
         timelineDisplay.appendChild(timelineItem);
     });
-    
+
     document.getElementById('timeline-panel').classList.remove('hidden');
 }
 
@@ -983,16 +1003,16 @@ function filterPlanets() {
     const typeFilter = document.getElementById('planet-filter').value;
     const missionFilter = document.getElementById('mission-filter').value;
     const statusFilter = document.getElementById('status-filter').value;
-    
+
     exoplanets.forEach(planet => {
         const planetData = planet.userData;
         let visible = true;
-        
+
         // Skip system stars in galaxy view
         if (planetData.type === 'system') {
             return;
         }
-        
+
         // Type filter
         if (typeFilter !== 'all') {
             if (typeFilter === 'habitable') {
@@ -1001,19 +1021,19 @@ function filterPlanets() {
                 visible = visible && planetData.type === typeFilter;
             }
         }
-        
+
         // Mission filter
         if (missionFilter !== 'all') {
             visible = visible && planetData.mission === missionFilter;
         }
-        
+
         // Status filter
         if (statusFilter !== 'all') {
             visible = visible && planetData.status === statusFilter;
         }
-        
+
         planet.visible = visible;
-        
+
         // Also hide/show atmosphere if it exists
         if (planetData.atmosphere) {
             planetData.atmosphere.visible = visible;
@@ -1028,7 +1048,7 @@ function updateUIContext() {
     const addPlanetBtn = document.getElementById('add-planet-btn');
     const systemInfo = document.getElementById('system-info');
     const resetViewBtn = document.getElementById('reset-view-btn');
-    
+
     if (currentSystem === 'overview') {
         navigationText.textContent = 'Click on a star system to explore it in detail';
         habitableZoneBtn.style.display = 'none';
@@ -1040,7 +1060,7 @@ function updateUIContext() {
         habitableZoneBtn.style.display = 'inline-block';
         addPlanetBtn.textContent = '🪐 Add Random Planet';
         resetViewBtn.classList.add('hidden'); // Hide until planet is selected
-        
+
         // Show system information
         const system = starSystems[currentSystem];
         if (system) {
@@ -1050,7 +1070,7 @@ function updateUIContext() {
             systemInfo.classList.remove('hidden');
         }
     }
-    
+
     // Close any open panels
     document.getElementById('info-panel').classList.add('hidden');
     document.getElementById('comparison-panel').classList.add('hidden');
@@ -1060,13 +1080,13 @@ function updateUIContext() {
 // Reset camera to system overview
 function resetSystemView() {
     if (cameraAnimating) return;
-    
+
     // Stop following planet
     followingPlanet = null;
-    
+
     // Hide reset button
     document.getElementById('reset-view-btn').classList.add('hidden');
-    
+
     // Animate back to system view
     animateCameraToSystemView();
 }
@@ -1074,33 +1094,33 @@ function resetSystemView() {
 // Animate camera back to system overview
 function animateCameraToSystemView() {
     cameraAnimating = true;
-    
+
     // Target position for system overview
     const targetPosition = new THREE.Vector3(0, 30, 80);
     const targetLookAt = new THREE.Vector3(0, 0, 0);
-    
+
     // Store initial camera state
     const startPosition = camera.position.clone();
     const startTarget = controls.target.clone();
-    
+
     // Animation parameters
     const duration = 1200; // 1.2 seconds
     const startTime = Date.now();
-    
+
     function animateCamera() {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
+
         // Use easing function for smooth animation
         const easeProgress = easeInOutCubic(progress);
-        
+
         // Interpolate camera position
         camera.position.lerpVectors(startPosition, targetPosition, easeProgress);
-        
+
         // Interpolate controls target
         controls.target.lerpVectors(startTarget, targetLookAt, easeProgress);
         controls.update();
-        
+
         if (progress < 1) {
             animationId = requestAnimationFrame(animateCamera);
         } else {
@@ -1109,7 +1129,7 @@ function animateCameraToSystemView() {
             animationId = null;
         }
     }
-    
+
     // Start animation
     animateCamera();
 }
@@ -1127,7 +1147,7 @@ function addRandomPlanet() {
 function addRandomStarSystem() {
     const systemNames = ['Wolf 359', 'Barnard\'s Star', 'Luhman 16', 'WISE 0855', 'Alpha Centauri C'];
     const systemName = systemNames[Math.floor(Math.random() * systemNames.length)] + '-' + Math.floor(Math.random() * 999);
-    
+
     // Create a new system with random planets
     const planetCount = Math.floor(Math.random() * 4) + 1;
     const newSystem = {
@@ -1135,47 +1155,47 @@ function addRandomStarSystem() {
         planets: [],
         distance: (Math.random() * 100 + 10).toFixed(1) + ' light-years'
     };
-    
+
     for (let i = 0; i < planetCount; i++) {
         const randomPlanet = generateRandomPlanetData();
         randomPlanet.system = systemName;
         newSystem.planets.push(randomPlanet);
     }
-    
+
     starSystems[systemName] = newSystem;
-    
+
     // Update selector
     const selector = document.getElementById('system-select');
     const option = document.createElement('option');
     option.value = systemName;
     option.textContent = `⭐ ${systemName} (${newSystem.planets.length} planets)`;
     selector.appendChild(option);
-    
+
     // Refresh galaxy overview
     if (currentSystem === 'overview') {
         showSystem('overview');
     }
-    
+
     console.log(`Added new star system: ${systemName} with ${planetCount} planets`);
 }
 
 // Add random planet to current system
 function addRandomPlanetToCurrentSystem() {
     if (currentSystem === 'overview') return;
-    
+
     const newPlanet = generateRandomPlanetData();
     newPlanet.system = currentSystem;
-    
+
     // Add to current system
     if (starSystems[currentSystem]) {
         starSystems[currentSystem].planets.push(newPlanet);
     }
-    
+
     // Create the planet in the scene
     const planetIndex = exoplanets.length;
     const totalPlanets = starSystems[currentSystem].planets.length;
     createPlanetInSystem(newPlanet, planetIndex, totalPlanets);
-    
+
     console.log(`Added new planet: ${newPlanet.name} to ${currentSystem} system`);
 }
 
@@ -1192,11 +1212,11 @@ function switchEducationTab(tab) {
         btn.classList.remove('active');
     });
     document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-    
+
     // Update content
     const content = document.getElementById('education-content');
-    
-    switch(tab) {
+
+    switch (tab) {
         case 'transit':
             content.innerHTML = `
                 <h3>🌟 The Transit Method</h3>
@@ -1220,7 +1240,7 @@ function switchEducationTab(tab) {
                 <p><em>💡 Fun Fact: A planet the size of Earth blocking a Sun-like star dims the light by only 0.008%!</em></p>
             `;
             break;
-            
+
         case 'missions':
             content.innerHTML = `
                 <h3>🛰️ Space Missions</h3>
@@ -1251,7 +1271,7 @@ function switchEducationTab(tab) {
                 </ul>
             `;
             break;
-            
+
         case 'ml':
             content.innerHTML = `
                 <h3>🤖 AI & Machine Learning in Exoplanet Detection</h3>
@@ -1282,7 +1302,7 @@ function switchEducationTab(tab) {
                 <p><em>🔬 This Celestia Web app shows the results of AI analysis - each planet has a confidence score!</em></p>
             `;
             break;
-            
+
         case 'quiz':
             content.innerHTML = `
                 <h3>🧠 Test Your Knowledge!</h3>
@@ -1323,7 +1343,7 @@ function selectAnswer(element, isCorrect) {
     element.parentNode.querySelectorAll('.quiz-option').forEach(opt => {
         opt.classList.remove('correct', 'incorrect');
     });
-    
+
     // Add appropriate class
     if (isCorrect) {
         element.classList.add('correct');

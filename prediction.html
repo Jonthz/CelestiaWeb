@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Command Center - Real-Time Prediction</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f0f1a;
+            --panel-bg: rgba(30, 30, 50, 0.6);
+            --accent-color: #00ff88;
+            --text-color: #e0e0e0;
+            --danger-color: #ff4d4d;
+            --warning-color: #ffcc00;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 10% 20%, rgba(0, 255, 136, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 100, 255, 0.1) 0%, transparent 20%);
+        }
+
+        header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: var(--panel-bg);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .status-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--danger-color);
+            box-shadow: 0 0 10px var(--danger-color);
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.connected {
+            background-color: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        /* Sidebar - Planet Info */
+        .sidebar {
+            background: var(--panel-bg);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .planet-portrait {
+            width: 100%;
+            aspect-ratio: 1;
+            background: radial-gradient(circle at 30% 30%, #444, #000);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.1);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 5px;
+        }
+
+        .info-label {
+            opacity: 0.7;
+        }
+
+        .info-value {
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        /* Main Content - AI Analysis */
+        .main-panel {
+            background: var(--panel-bg);
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            overflow-y: auto;
+        }
+
+        .prediction-header {
+            text-align: center;
+        }
+
+        .score-display {
+            font-size: 5rem;
+            font-weight: bold;
+            display: block;
+            margin: 20px 0;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .prediction-label {
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-box {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .feature-name {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-bottom: 5px;
+        }
+
+        .feature-val {
+            font-size: 1.2rem;
+            font-family: monospace;
+        }
+
+        /* Charts */
+        .chart-container {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            display: none;
+        }
+
+        .waiting-message {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span style="font-size: 2rem;">🔮</span>
+            <div>
+                <h1>AI Prediction Core</h1>
+                <div style="font-size: 0.8rem; opacity: 0.7;">Neural Network Model v1.0 • Keras/TensorFlow</div>
+            </div>
+        </div>
+        <div class="status-badge">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Disconnected</span>
+        </div>
+    </header>
+
+    <aside class="sidebar">
+        <div class="planet-portrait" id="planet-icon">🪐</div>
+        <h2 id="p-name">No Planet Selected</h2>
+
+        <div class="info-row">
+            <span class="info-label">System</span>
+            <span class="info-value" id="p-system">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Radius</span>
+            <span class="info-value" id="p-radius">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Dist. from Earth</span>
+            <span class="info-value" id="p-distance">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Discovery Year</span>
+            <span class="info-value" id="p-year">-</span>
+        </div>
+    </aside>
+
+    <main class="main-panel">
+        <div id="welcome-message" style="text-align: center; margin-top: 50px;">
+            <h2>Waiting for Telemetry...</h2>
+            <p style="opacity: 0.7; max-width: 500px; margin: 0 auto;">
+                Open the <strong>Individual Planet Viewer</strong> in another window and select a planet.
+                Data will be transmitted here securely for AI Analysis.
+            </p>
+        </div>
+
+        <div id="analysis-content" style="display: none;">
+            <div class="prediction-header">
+                <div>AI HABITABILITY SCORE</div>
+                <div class="score-display" id="ai-score">--%</div>
+                <div class="prediction-label" id="ai-verdict">ANALYZING</div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="confidenceChart"></canvas>
+            </div>
+
+            <h3>Key Scientific Features</h3>
+            <div class="features-grid">
+                <div class="feature-box">
+                    <div class="feature-name">Insolation Flux</div>
+                    <div class="feature-val" id="feat-insol">--</div>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-name">Planet Radius (Earths)</div>
+                    <div class="feature-val" id="feat-prad">--</div>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-name">Eq. Temperature (K)</div>
+                    <div class="feature-val" id="feat-teq">--</div>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-name">Period (Days)</div>
+                    <div class="feature-val" id="feat-period">--</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="prediction_dashboard.js"></script>
+</body>
+
+</html>

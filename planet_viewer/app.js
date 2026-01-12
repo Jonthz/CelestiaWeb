@@ -11,6 +11,10 @@ let rotationAxisLine = null;
 const planetSize = 2;
 const cameraDistance = 20;
 
+// Initialize Broadcast Channel for AI
+const aiChannel = new BroadcastChannel('celestia_ai_channel');
+console.log("📡 AI Broadcasting Channel initialized in Planet Viewer");
+
 init();
 
 async function init() {
@@ -795,6 +799,24 @@ function updatePlanetInfo() {
         habitableZoneElement.className = `value habitable-${currentPlanet.inHabitableZone ? 'yes' : 'no'}`;
     }
     missionElement.className = `value mission-${currentPlanet.mission?.toLowerCase()}`;
+
+    // Broadcast to AI Dashboard
+    if (aiChannel) {
+        console.log("📡 Broadcasting planet to AI:", currentPlanet.name);
+        aiChannel.postMessage({
+            type: 'planet_selected',
+            data: {
+                id: currentPlanet.id || currentPlanet.name,
+                name: currentPlanet.name,
+                system: currentPlanet.system,
+                radius: currentPlanet.radius,
+                distance: currentPlanet.distance,
+                discoveryYear: currentPlanet.discoveryYear,
+                temperature: currentPlanet.temperature,
+                status: currentPlanet.status
+            }
+        });
+    }
 }
 
 function updateNavigation() {
@@ -813,7 +835,7 @@ function updateUI() {
     if (totalElement) {
         totalElement.textContent = planets.length;
     }
-    
+
     // Update navigation info
     const navInfo = document.getElementById('navigation-info');
     if (navInfo && currentPlanet) {
@@ -1021,9 +1043,9 @@ function updatePlanetSelect() {
     const startIndex = currentPage * planetsPerPage;
     const endIndex = Math.min(startIndex + planetsPerPage, filteredPlanets.length);
     const currentPagePlanets = filteredPlanets.slice(startIndex, endIndex);
-    
+
     select.innerHTML = `<option value="" disabled selected>Page ${currentPage + 1} - Select a Planet (${startIndex + 1}-${endIndex} of ${filteredPlanets.length})</option>`;
-    
+
     currentPagePlanets.forEach((planet, pageIndex) => {
         const globalIndex = filteredPlanets.indexOf(planet);
         const option = document.createElement('option');
@@ -1034,7 +1056,7 @@ function updatePlanetSelect() {
 
     select.removeEventListener('change', handlePlanetSelect); // Remove old listener
     select.addEventListener('change', handlePlanetSelect);
-    
+
     updatePaginationInfo();
 }
 
@@ -1050,7 +1072,7 @@ function setupPaginationControls() {
     // Add pagination controls to the existing UI
     const controlsContainer = document.querySelector('.controls-section');
     if (!controlsContainer) return;
-    
+
     const paginationHTML = `
         <div class="pagination-controls" style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.7); border-radius: 10px;">
             <div class="filter-section" style="margin-bottom: 10px;">
@@ -1076,9 +1098,9 @@ function setupPaginationControls() {
             </div>
         </div>
     `;
-    
+
     controlsContainer.insertAdjacentHTML('afterbegin', paginationHTML);
-    
+
     // Setup event listeners
     document.getElementById('prev-page').addEventListener('click', () => {
         if (currentPage > 0) {
@@ -1086,7 +1108,7 @@ function setupPaginationControls() {
             updatePlanetSelect();
         }
     });
-    
+
     document.getElementById('next-page').addEventListener('click', () => {
         const maxPages = Math.ceil(filteredPlanets.length / planetsPerPage);
         if (currentPage < maxPages - 1) {
@@ -1094,14 +1116,14 @@ function setupPaginationControls() {
             updatePlanetSelect();
         }
     });
-    
+
     document.getElementById('planet-type-filter').addEventListener('change', (e) => {
         currentFilter = e.target.value;
         currentPage = 0; // Reset to first page
         applyFilter();
         updatePlanetSelect();
     });
-    
+
     document.getElementById('planets-per-page').addEventListener('change', (e) => {
         planetsPerPage = parseInt(e.target.value);
         currentPage = 0; // Reset to first page
@@ -1115,7 +1137,7 @@ function applyFilter() {
     } else {
         filteredPlanets = planets.filter(planet => planet.type === currentFilter);
     }
-    
+
     // Update filter dropdown with counts
     const filterSelect = document.getElementById('planet-type-filter');
     if (filterSelect) {
@@ -1123,7 +1145,7 @@ function applyFilter() {
         planets.forEach(p => {
             typeCounts[p.type] = (typeCounts[p.type] || 0) + 1;
         });
-        
+
         filterSelect.innerHTML = `
             <option value="all">All Types (${planets.length})</option>
             <option value="Gas Giant">Gas Giant (${typeCounts['Gas Giant'] || 0})</option>
@@ -1139,14 +1161,14 @@ function applyFilter() {
 function updatePaginationInfo() {
     const infoElement = document.getElementById('pagination-info');
     if (!infoElement) return;
-    
+
     const totalPages = Math.ceil(filteredPlanets.length / planetsPerPage);
     infoElement.textContent = `Page ${currentPage + 1} of ${totalPages} (${filteredPlanets.length} planets)`;
-    
+
     // Update button states
     const prevBtn = document.getElementById('prev-page');
     const nextBtn = document.getElementById('next-page');
-    
+
     if (prevBtn) prevBtn.disabled = currentPage === 0;
     if (nextBtn) nextBtn.disabled = currentPage >= totalPages - 1;
 }
