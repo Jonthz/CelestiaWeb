@@ -13,7 +13,7 @@ from tensorflow import keras
 # ==========================================
 # CONFIGURATION
 # ==========================================
-PORT = 8093
+PORT = 8094
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'model')
 MODEL_PATH = os.path.join(MODEL_DIR, 'habitable_model.keras')
 DATA_PATH = os.path.join(MODEL_DIR, 'planet_features.pkl')
@@ -53,6 +53,12 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         super().end_headers()
+
+    def do_GET(self):
+        if self.path == '/list_planets':
+            self.handle_list_planets()
+        else:
+            return http.server.SimpleHTTPRequestHandler.do_GET(self)
 
     def do_POST(self):
         # Handle API requests
@@ -140,6 +146,47 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         except Exception as e:
             print(f"Error processing prediction: {e}")
+            self.send_response(500)
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
+
+    def handle_list_planets(self):
+        if planet_features is None:
+            self.send_response(503)
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': 'Data not loaded'}).encode())
+            return
+            
+        try:
+            # Get a sample of 50 planets to list
+            # We want to return ID and some basic cols if available
+            sample = planet_features.sample(50) if len(planet_features) > 50 else planet_features
+            
+            planets_list = []
+            for idx, row in sample.iterrows():
+                # idx is kepoi_name (e.g., K00753.01)
+                
+                # Extract some info for the table
+                insol = row.get('koi_insol', 0)
+                prad = row.get('koi_prad', 0)
+                teq = row.get('koi_teq', 0)
+                period = row.get('koi_period', 0)
+                
+                planets_list.append({
+                    'id': idx,
+                    'insol': float(insol),
+                    'prad': float(prad),
+                    'teq': float(teq),
+                    'period': float(period)
+                })
+                
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(planets_list).encode())
+            
+        except Exception as e:
+            print(f"Error listing planets: {e}")
             self.send_response(500)
             self.end_headers()
             self.wfile.write(json.dumps({'error': str(e)}).encode())

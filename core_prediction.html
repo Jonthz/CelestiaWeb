@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core AI Predictor - CelestiaWeb</title>
+    <style>
+        :root {
+            --bg-color: #0b0b14;
+            --panel-bg: #151525;
+            --accent-color: #00ffcc;
+            --text-color: #e0e0e0;
+            --danger-color: #ff4d4d;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* Left: Data List */
+        .data-panel {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 10px;
+            height: 70vh;
+            overflow-y: auto;
+            border: 1px solid #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            color: var(--accent-color);
+            position: sticky;
+            top: 0;
+            background: var(--panel-bg);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+        }
+
+        .btn-predict {
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-predict:hover {
+            transform: scale(1.05);
+        }
+
+        /* Right: Prediction Result */
+        .result-panel {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #333;
+            position: relative;
+        }
+
+        /* Reusing Animation Styles */
+        .processing-view {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .step-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0.5;
+            transition: 0.3s;
+        }
+
+        .step-item.active {
+            opacity: 1;
+            border: 1px solid var(--accent-color);
+            background: rgba(0, 255, 204, 0.1);
+        }
+
+        .spinner {
+            width: 15px;
+            height: 15px;
+            border: 2px solid #fff;
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s infinite;
+            display: none;
+        }
+
+        .active .spinner {
+            display: block;
+        }
+
+        .active .check {
+            display: none;
+        }
+
+        .check {
+            color: var(--accent-color);
+            display: none;
+            font-weight: bold;
+            margin-left: auto;
+        }
+
+        .completed .check {
+            display: block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .final-result {
+            display: none;
+            text-align: center;
+        }
+
+        .score {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .verdict {
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+
+        .back-btn {
+            margin-top: 20px;
+            text-decoration: none;
+            color: #888;
+            border: 1px solid #555;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .back-btn:hover {
+            color: #fff;
+            border-color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header style="text-align: center; margin-bottom: 20px;">
+        <h1>Exoplanet Prediction Core</h1>
+        <p style="color: #888;">Select a sample from the Kepler Dataset to run the Neural Network.</p>
+        <a href="index.html" class="back-btn">← Back to Main Menu</a>
+    </header>
+
+    <div class="container">
+        <!-- Sample List -->
+        <div class="data-panel">
+            <h3>Available Samples (Random 50)</h3>
+            <table id="planet-table">
+                <thead>
+                    <tr>
+                        <th>Planet ID</th>
+                        <th>Radius (Re)</th>
+                        <th>Temp (K)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="planet-list-body">
+                    <tr>
+                        <td colspan="4" style="text-align: center;">Loading data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Prediction Area -->
+        <div class="result-panel">
+            <div id="instruction-msg" style="opacity: 0.5;">
+                Select a planet from the left to predict.
+            </div>
+
+            <div id="processing-view" class="processing-view">
+                <h3 id="proc-title">Analyzing...</h3>
+                <div class="step-item" id="step-1">
+                    <span>📡</span> <span>Loading Feature Vector</span>
+                    <div class="spinner"></div>
+                    <div class="check">✓</div>
+                </div>
+                <div class="step-item" id="step-2">
+                    <span>🧹</span> <span>Preprocessing & Normalization</span>
+                    <div class="spinner"></div>
+                    <div class="check">✓</div>
+                </div>
+                <div class="step-item" id="step-3">
+                    <span>🤖</span> <span>Running MLP Model (128 nodes)</span>
+                    <div class="spinner"></div>
+                    <div class="check">✓</div>
+                </div>
+                <div class="step-item" id="step-4">
+                    <span>🔬</span> <span>Evaluating Candidate Score</span>
+                    <div class="spinner"></div>
+                    <div class="check">✓</div>
+                </div>
+            </div>
+
+            <div id="final-result" class="final-result">
+                <div class="verdict" id="res-verdict">CONFIRMED</div>
+                <div class="score" id="res-score">98.5%</div>
+                <p>Probability Calculation Complete</p>
+                <div
+                    style="font-size: 0.9rem; margin-top: 20px; text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px;">
+                    <div><strong>Insolation:</strong> <span id="res-insol">-</span></div>
+                    <div><strong>Radius:</strong> <span id="res-prad">-</span></div>
+                    <div><strong>Temp:</strong> <span id="res-teq">-</span></div>
+                    <div><strong>Period:</strong> <span id="res-period">-</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8094';
+
+        // Load Planets on Start
+        async function loadPlanets() {
+            try {
+                const res = await fetch(`${API_URL}/list_planets`);
+                const data = await res.json();
+
+                const tbody = document.getElementById('planet-list-body');
+                tbody.innerHTML = '';
+
+                data.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${p.id}</td>
+                        <td>${p.prad.toFixed(2)}</td>
+                        <td>${p.teq.toFixed(0)}</td>
+                        <td><button class="btn-predict" onclick="startPrediction('${p.id}')">Predict</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error(err);
+                document.getElementById('planet-list-body').innerHTML = `<tr><td colspan="4">Error loading data. Ensure server is running.</td></tr>`;
+            }
+        }
+
+        async function startPrediction(id) {
+            // Reset UI
+            document.getElementById('instruction-msg').style.display = 'none';
+            document.getElementById('final-result').style.display = 'none';
+            document.getElementById('processing-view').style.display = 'flex';
+            document.getElementById('proc-title').textContent = `Analyzing ${id}...`;
+
+            // Reset Steps
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById(`step-${i}`);
+                el.className = 'step-item';
+            }
+
+            // Animation Sequence
+            await playStep(1, 500);
+            await playStep(2, 600);
+            await playStep(3, 1000);
+            await playStep(4, 400);
+
+            // Fetch Real Prediction
+            try {
+                const res = await fetch(`${API_URL}/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ planet_id: id })
+                });
+                const result = await res.json();
+
+                showResult(result);
+            } catch (err) {
+                alert("Prediction Failed: " + err);
+            }
+
+            document.getElementById('processing-view').style.display = 'none';
+        }
+
+        function playStep(stepNum, duration) {
+            return new Promise(resolve => {
+                const step = document.getElementById(`step-${stepNum}`);
+                step.classList.add('active');
+                setTimeout(() => {
+                    step.classList.remove('active');
+                    step.classList.add('completed');
+                    resolve();
+                }, duration);
+            });
+        }
+
+        function showResult(data) {
+            const container = document.getElementById('final-result');
+            container.style.display = 'block';
+
+            const score = data.habitability_score;
+            const isPlanet = data.is_habitable_candidate;
+
+            const verdictEl = document.getElementById('res-verdict');
+            const scoreEl = document.getElementById('res-score');
+
+            verdictEl.textContent = isPlanet ? "CONFIRMED PLANET" : "FALSE POSITIVE";
+            verdictEl.style.color = isPlanet ? "#00ffcc" : "#ff4d4d";
+
+            scoreEl.textContent = (score * 100).toFixed(1) + "%";
+            scoreEl.style.color = isPlanet ? "#00ffcc" : "#ff4d4d";
+
+            document.getElementById('res-insol').textContent = data.features.koi_insol?.toFixed(2);
+            document.getElementById('res-prad').textContent = data.features.koi_prad?.toFixed(2);
+            document.getElementById('res-teq').textContent = data.features.koi_teq?.toFixed(0) + ' K';
+            document.getElementById('res-period').textContent = data.features.koi_period?.toFixed(2) + ' days';
+        }
+
+        loadPlanets();
+    </script>
+</body>
+
+</html>

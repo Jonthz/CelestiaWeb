@@ -59,16 +59,59 @@ initChart();
 statusText.textContent = "Listening for Main App...";
 statusDot.classList.add('connected'); // Always "connected" to channel loosely
 
+// Listen for Planet Selection from App
 channel.onmessage = async (event) => {
-    console.log("📥 Dashboard received message:", event.data);
-    const { type, data } = event.data;
+    if (event.data && event.data.type === 'planet_selected') {
+        const planetData = event.data.data;
+        console.log("📥 Dashboard received planet:", planetData.name);
 
-    if (type === 'planet_selected') {
-        console.log("🎯 Planet selected:", data.name);
-        updatePlanetInfo(data);
-        await getPrediction(data);
+        // Start the visualization sequence instead of immediate predict
+        startProcessingSequence(planetData);
     }
 };
+
+async function startProcessingSequence(planetData) {
+    // 1. Reset UI
+    document.getElementById('welcome-message').style.display = 'none';
+    document.getElementById('analysis-content').style.display = 'none';
+    const processingView = document.getElementById('processing-view');
+    processingView.style.display = 'flex';
+
+    // Update Sidebar immediately
+    updatePlanetInfo(planetData); // Renamed from updateSidebar to match existing function
+
+    // Reset steps
+    for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`step-${i}`);
+        el.className = 'step-item'; // remove active/completed
+    }
+
+    // 2. Play Sequence
+    await playStep(1, 800);  // Receiving
+    await playStep(2, 1000); // Preprocessing
+    await playStep(3, 1500); // Neural Net (take a bit longer for 'thinking')
+    await playStep(4, 600);  // Evaluation
+
+    // 3. Perform actual prediction
+    await getPrediction(planetData); // Renamed from predict to match existing function
+
+    // 4. Show Results
+    processingView.style.display = 'none';
+    document.getElementById('analysis-content').style.display = 'block';
+}
+
+function playStep(stepNum, duration) {
+    return new Promise(resolve => {
+        const step = document.getElementById(`step-${stepNum}`);
+        step.classList.add('active');
+
+        setTimeout(() => {
+            step.classList.remove('active');
+            step.classList.add('completed');
+            resolve();
+        }, duration);
+    });
+}
 
 function updatePlanetInfo(data) {
     statusText.textContent = "Receiving Data";
@@ -79,8 +122,8 @@ function updatePlanetInfo(data) {
     domDist.textContent = data.distance || '?';
     domYear.textContent = data.discoveryYear || '?';
 
-    panelWelcome.style.display = 'none';
-    panelAnalysis.style.display = 'block';
+    // panelWelcome.style.display = 'none'; // This is now handled by startProcessingSequence
+    // panelAnalysis.style.display = 'block'; // This is now handled by startProcessingSequence
 }
 
 async function getPrediction(planetData) {
@@ -99,7 +142,7 @@ async function getPrediction(planetData) {
             planet_id: planetData.id || planetData.name // Fallback to name if ID missing
         };
 
-        const response = await fetch('http://localhost:8093/predict', {
+        const response = await fetch('http://localhost:8094/predict', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -129,6 +172,19 @@ function renderResult(result) {
     domVerdict.textContent = isHabitable ? "POTENTIALLY HABITABLE" : "NON-HABITABLE";
     domVerdict.style.color = isHabitable ? "#00ff88" : "#ff4d4d";
     domScore.style.color = isHabitable ? "#00ff88" : "#ff4d4d";
+
+    // Verdict Logic (Based on Kepler Disposition) - This part was in the instruction snippet, but seems to be a different logic.
+    // Keeping the original logic for consistency with the existing code structure.
+    // If the intent was to replace the above with this, please clarify.
+    // const isPlanet = result.probability > 50; 
+    // const verdict = isPlanet ? "CANDIDATE CONFIRMED" : "FALSE POSITIVE";
+    // const color = isPlanet ? "#00ff88" : "#ff4d4d"; // Green vs Red
+
+    // domVerdict.textContent = verdict;
+    // domVerdict.style.color = color;
+
+    // domScore.textContent = Math.round(result.probability) + "%";
+    // domScore.style.color = color;
 
     // Update Features
     domFeatInsol.textContent = result.features.koi_insol ? result.features.koi_insol.toFixed(2) : 'N/A';
