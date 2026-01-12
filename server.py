@@ -13,7 +13,7 @@ from tensorflow import keras
 # ==========================================
 # CONFIGURATION
 # ==========================================
-PORT = 8092
+PORT = 8093
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'model')
 MODEL_PATH = os.path.join(MODEL_DIR, 'habitable_model.keras')
 DATA_PATH = os.path.join(MODEL_DIR, 'planet_features.pkl')

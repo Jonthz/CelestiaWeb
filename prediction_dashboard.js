@@ -99,7 +99,7 @@ async function getPrediction(planetData) {
             planet_id: planetData.id || planetData.name // Fallback to name if ID missing
         };
 
-        const response = await fetch('http://localhost:8092/predict', {
+        const response = await fetch('http://localhost:8093/predict', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)

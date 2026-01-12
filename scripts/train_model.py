@@ -1,7 +1,7 @@
+import os
 import pandas as pd
 import numpy as np
 import urllib.parse
-import os
 import pickle
 import tensorflow as tf
 from tensorflow import keras
@@ -9,9 +9,10 @@ from tensorflow.keras import layers, callbacks
 from sklearn.model_selection import train_test_split
 
 # ==========================================
-# CONSTANTS
+# CONFIGURATION
 # ==========================================
-MODEL_DIR = os.path.join(os.path.dirname(__file__), '..', 'model')
+MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'model')
+os.makedirs(MODEL_DIR, exist_ok=True)
 MODEL_PATH = os.path.join(MODEL_DIR, 'habitable_model.keras')
 DATA_PATH = os.path.join(MODEL_DIR, 'planet_features.pkl')
 RAW_DATA_PATH = os.path.join(MODEL_DIR, 'kepler_raw.csv')
